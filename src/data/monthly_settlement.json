@@ -1,0 +1,127 @@
+[
+    {
+        "id": "JS2025120001",
+        "cycle": "2025-12",
+        "channelName": "成都XX科技有限公司",
+        "commissionType": "ladder",
+        "level": "gold",
+        "orderCount": 5,
+        "orderAmount": 120.0,
+        "rate": "12%",
+        "payableAmount": 14.4,
+        "adjustmentAmount": 1.0,
+        "actualAmount": 15.4,
+        "status": "completed",
+        "details": [
+            {
+                "orderId": "ORD001",
+                "customerName": "四川某能源公司",
+                "signDate": "2025-12-05",
+                "amount": 50.0
+            },
+            {
+                "orderId": "ORD002",
+                "customerName": "重庆某制造厂",
+                "signDate": "2025-12-10",
+                "amount": 30.0
+            },
+            {
+                "orderId": "ORD003",
+                "customerName": "成都某电商",
+                "signDate": "2025-12-15",
+                "amount": 20.0
+            },
+            {
+                "orderId": "ORD004",
+                "customerName": "德阳某物流",
+                "signDate": "2025-12-20",
+                "amount": 10.0
+            },
+            {
+                "orderId": "ORD005",
+                "customerName": "绵阳某科技",
+                "signDate": "2025-12-25",
+                "amount": 10.0
+            }
+        ],
+        "adjustments": [
+            {
+                "id": "ADJ001",
+                "type": "commission",
+                "amount": 1.0,
+                "reason": "双12限时业绩补贴",
+                "auditNo": "SP001"
+            }
+        ]
+    },
+    {
+        "id": "JS2025120002",
+        "cycle": "2025-12",
+        "channelName": "杭州YY信息技术有限公司",
+        "commissionType": "ladder",
+        "level": "silver",
+        "orderCount": 3,
+        "orderAmount": 45.0,
+        "rate": "8%",
+        "payableAmount": 3.6,
+        "adjustmentAmount": 0,
+        "actualAmount": 3.6,
+        "status": "reviewing",
+        "details": [
+            {
+                "orderId": "ORD006",
+                "customerName": "杭州某服装厂",
+                "signDate": "2025-12-08",
+                "amount": 20.0
+            },
+            {
+                "orderId": "ORD007",
+                "customerName": "宁波某外贸公司",
+                "signDate": "2025-12-18",
+                "amount": 15.0
+            },
+            {
+                "orderId": "ORD008",
+                "customerName": "绍兴某印染厂",
+                "signDate": "2025-12-28",
+                "amount": 10.0
+            }
+        ]
+    },
+    {
+        "id": "JS2025120003",
+        "cycle": "2025-12",
+        "channelName": "北京ZZ科技有限公司",
+        "commissionType": "fixed",
+        "orderCount": 2,
+        "orderAmount": 50.0,
+        "rate": "10%",
+        "payableAmount": 5.0,
+        "adjustmentAmount": -0.5,
+        "actualAmount": 4.5,
+        "status": "pending",
+        "details": [
+            {
+                "orderId": "ORD009",
+                "customerName": "北京某教育机构",
+                "signDate": "2025-12-12",
+                "amount": 30.0
+            },
+            {
+                "orderId": "ORD010",
+                "customerName": "天津某进出口公司",
+                "signDate": "2025-12-22",
+                "amount": 20.0
+            }
+        ],
+        "adjustments": [
+            {
+                "id": "ADJ002",
+                "type": "commission",
+                "amount": -0.5,
+                "reason": "未按约完成季度培训扣款",
+                "auditNo": "SP002"
+            }
+        ]
+    }
+]

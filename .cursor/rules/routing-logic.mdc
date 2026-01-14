@@ -1,0 +1,15 @@
+---
+description: Follow routing configuration and module organization standards.
+globs: src/routes/**/*
+---
+
+# Routing & Module Standards
+
+- **Routing Hierarchy**:
+  - Define routes in `src/routes/index.tsx`.
+- **Menu Sync**:
+  - Ensure side menu configuration in `src/routes/menuConfig.tsx` stays in sync with actual routing.
+- **Page Layout**:
+  - New pages should be created in `src/pages/` and wrapped within appropriate layout components.
+- **References**:
+  - Refer to [ROUTING_STANDARDS.md](file:///Users/njwander/code/boss/demo/jiaofu-demo/guidelines/ROUTING_STANDARDS.md) for more details.

@@ -1,0 +1,13 @@
+---
+description: Always use Chinese for communication and documentation.
+globs: *
+---
+
+# Chinese Language Preference
+
+- Always use **Chinese** (中文) for all communications, documentation, and logic explanations.
+- The following documents MUST be written in Chinese:
+  - `implementation_plan.md`
+  - `task.md`
+  - `walkthrough.md`
+- When the user asks technical questions or requests code changes, provide clear and concise explanations in Chinese.

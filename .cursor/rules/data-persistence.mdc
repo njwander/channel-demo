@@ -1,0 +1,15 @@
+---
+description: Follow localStorage persistence and data initialization patterns.
+globs: src/utils/**/*, src/store/**/*, src/pages/**/*
+---
+
+# Data Persistence Standards
+
+- **Storage Method**: Use `localStorage` for data persistence in this demo.
+- **Data Lifecycle**:
+  - **Initialization**: Clean and reload static data from JSON files upon service start.
+  - **Persistence**: User modifications remain in `localStorage` until next service restart/manual reset.
+- **Access Patterns**:
+  - Use unified storage utility functions instead of direct `localStorage` calls.
+- **References**:
+  - Refer to [DATA_STANDARDS.md](file:///Users/njwander/code/boss/demo/jiaofu-demo/guidelines/DATA_STANDARDS.md) for more details.

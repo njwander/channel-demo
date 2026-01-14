@@ -1,0 +1,29 @@
+---
+description: Strictly follow the commit message specification in Chinese.
+globs: *
+---
+
+# Commit Message Specification
+
+- **CRITICAL**: All commit message content (including Type, Scope, Subject and Description) MUST be in **Chinese** (中文).
+- **IDE AUTO-GENERATE**: When using the 'Generate commit message' feature, you MUST strictly adhere to the Chinese requirement and the format below.
+- You MUST follow this format for all commit messages: `<Type>(<Scope>): <Subject>`
+
+- **Type (Required)**:
+| 关键词 | 含义 | 说明 | 示例 |
+| :--- | :--- | :--- | :--- |
+| feat | ✨ 新功能 | 开发新需求、新接口 | feat: 增加用户登录接口 |
+| fix | 🐛 修复 | 修复Bug | fix: 修复多线程下的空指针异常 |
+| refactor | ♻️ 重构 | 代码重构（不修Bug也不加功能） | refactor: 优化订单计算逻辑 |
+| perf | 🚀 性能 | 提升性能的代码 | perf: 优化SQL查询速度 |
+| style | 🎨 格式 | 仅修改空格、缩进、逗号等（不改逻辑） | style: 格式化 UserServiceImpl 代码 |
+| test | ✅ 测试 | 增加或修改测试用例 | test: 补充支付接口的单元测试 |
+| chore | 🔧 杂项 | 构建过程、依赖库、工具配置变动 | chore: 升级 Spring Boot 至 3.2 |
+| docs | 📝 文档 | 仅修改文档（注释、README） | docs: 更新接口文档参数说明 |
+
+- **Scope (Optional)**: The area of modification (e.g., UserModule, AuthService, pom.xml).
+- **Subject (Required)**: A brief description, max 50 characters.
+  - **Best Practices**:
+    1. Use **Chinese** (中文) (MANDATORY for both auto-generated and manual messages).
+    2. Start with a **verb**: Describe exactly what was done (avoid vague terms like "maybe" or "probably").
+    3. **Task ID (Recommended)**: Append the task number at the end of the Subject if applicable.

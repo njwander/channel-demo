@@ -1,0 +1,60 @@
+[
+    {
+        "id": "CH2024001",
+        "companyName": "上海某某科技有限公司",
+        "status": "active",
+        "commissionType": "ladder",
+        "level": "gold",
+        "commissionRate": "12%",
+        "startDate": "2024-01-01",
+        "endDate": "2024-12-31",
+        "ytdPerformance": 120.0,
+        "owner": "张三"
+    },
+    {
+        "id": "CH2024002",
+        "companyName": "杭州某某网络技术有限公司",
+        "status": "expiring",
+        "commissionType": "ladder",
+        "level": "silver",
+        "commissionRate": "8%",
+        "startDate": "2024-03-15",
+        "endDate": "2025-03-14",
+        "ytdPerformance": 85.0,
+        "owner": "张三"
+    },
+    {
+        "id": "CH2024003",
+        "companyName": "北京某某信息咨询有限公司",
+        "status": "active",
+        "commissionType": "fixed",
+        "commissionRate": "10%",
+        "startDate": "2024-06-01",
+        "endDate": "2025-05-31",
+        "ytdPerformance": 50.0,
+        "owner": "李四"
+    },
+    {
+        "id": "CH2024004",
+        "companyName": "上海某某战略合作伙伴",
+        "status": "active",
+        "commissionType": "personalized",
+        "commissionRate": "按约定",
+        "startDate": "2024-08-20",
+        "endDate": "2025-08-19",
+        "ytdPerformance": 30.0,
+        "owner": "王五"
+    },
+    {
+        "id": "CH2024005",
+        "companyName": "成都某某软件开发有限公司",
+        "status": "active",
+        "commissionType": "ladder",
+        "level": "bronze",
+        "commissionRate": "5%",
+        "startDate": "2024-05-10",
+        "endDate": "2025-05-09",
+        "ytdPerformance": 15.5,
+        "owner": "李四"
+    }
+]

@@ -1,0 +1,25 @@
+---
+description: Adhere to UI/UX design standards, Ant Design 5 usage, and styling rules.
+globs: src/**/*.{tsx,css}
+---
+
+# UI/UX & Styling Standards
+
+- **Color Palette**:
+  - **Primary (Theme)**: `#ff5050` (Red).
+  - **Success**: `#52c41a` (Green).
+  - **Warning**: `#faad14` (Orange).
+  - **Default Text**: `#000000d9`.
+- **Ant Design 5**:
+  - Use native Ant Design 5 components.
+  - Avoid ad-hoc utility classes. Use inline styles or defined CSS variables.
+- **UI Component Usage**:
+  - **Descriptions**: MUST be responsive.
+    ```typescript
+    import { RESPONSIVE_DESCRIPTIONS_COLUMN } from '@/utils/descriptionsConfig'
+    <Descriptions column={RESPONSIVE_DESCRIPTIONS_COLUMN} ... />
+    ```
+- **Responsive Design**:
+  - Ensure layouts are responsive across different screen sizes.
+- **References**:
+  - Refer to [STYLE_STANDARDS.md](file:///Users/njwander/code/boss/demo/jiaofu-demo/guidelines/STYLE_STANDARDS.md) and [UI_COMPONENT_STANDARDS.md](file:///Users/njwander/code/boss/demo/jiaofu-demo/guidelines/UI_COMPONENT_STANDARDS.md) for more details.

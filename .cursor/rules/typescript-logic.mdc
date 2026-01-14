@@ -1,0 +1,21 @@
+---
+description: Follow TypeScript coding standards, naming conventions, and logic patterns.
+globs: src/**/*.{ts,tsx}
+---
+
+# TypeScript & Logic Standards
+
+- **Strict Type Safety**: 
+  - Strictly prohibit the use of `any`. Use proper interfaces or types.
+  - Define explicit return types for functions where possible.
+- **Naming Conventions**:
+  - **PascalCase**: Components, Interfaces, Types, Classes.
+  - **camelCase**: Variables, Functions, Instance members.
+  - **UPPER_SNAKE_CASE**: Constants, Enums.
+- **Component Patterns**:
+  - Prefer Functional Components with Hooks.
+  - Use `interface` for component props (e.g., `interface Props { ... }`).
+- **Imports**:
+  - Use `@/` alias for absolute paths from `src/`.
+- **References**:
+  - Refer to [CODE_STANDARDS.md](file:///Users/njwander/code/boss/demo/jiaofu-demo/guidelines/CODE_STANDARDS.md) for more details.

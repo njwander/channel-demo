@@ -1,0 +1,40 @@
+[
+    {
+        "id": "ADJ202601130001",
+        "channelId": "CH001",
+        "channelName": "成都XX科技有限公司",
+        "type": "performance",
+        "amount": 20.0,
+        "cycle": "2025-12",
+        "reason": "早期部分大客户成交业绩补录",
+        "status": "approved",
+        "creator": "张三",
+        "applyTime": "2026-01-13 10:00:00",
+        "auditNo": "SP202601130001"
+    },
+    {
+        "id": "ADJ202601130002",
+        "channelId": "CH002",
+        "channelName": "杭州YY信息技术有限公司",
+        "type": "commission",
+        "amount": 0.5,
+        "cycle": "2025-12",
+        "reason": "双12渠道市场活动补贴",
+        "status": "pending",
+        "creator": "李四",
+        "applyTime": "2026-01-13 11:30:00"
+    },
+    {
+        "id": "ADJ202601130003",
+        "channelId": "CH003",
+        "channelName": "北京ZZ科技有限公司",
+        "type": "performance",
+        "amount": -5.0,
+        "cycle": "2025-11",
+        "reason": "退款订单业绩扣减调回",
+        "status": "approved",
+        "creator": "张三",
+        "applyTime": "2026-01-12 14:20:00",
+        "auditNo": "SP202601120005"
+    }
+]

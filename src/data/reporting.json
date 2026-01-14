@@ -1,0 +1,101 @@
+[
+    {
+        "id": "BB202601130001",
+        "customerName": "重庆某某科技有限公司",
+        "taxId": "91500000MA00000001",
+        "channelId": "CH2024001",
+        "channelName": "上海某某科技有限公司",
+        "channelOwner": "张三",
+        "reportingTime": "2026-01-13 10:30:00",
+        "status": "pending",
+        "followupStatus": "not_started",
+        "opportunityStage": "none",
+        "province": "重庆市",
+        "city": "重庆市",
+        "industry": "制造业",
+        "enterpriseScale": "51-200人",
+        "contactName": "王经理",
+        "contactPosition": "采购总监",
+        "contactPhone": "13800138000",
+        "voucherImages": [
+            "/temp/voucher1.png"
+        ],
+        "expectedAmount": 50,
+        "expectedDate": "2026-06-30"
+    },
+    {
+        "id": "BB202601100002",
+        "customerName": "四川某某商贸有限公司",
+        "taxId": "91510100MA00000002",
+        "channelId": "CH2024001",
+        "channelName": "上海某某科技有限公司",
+        "channelOwner": "张三",
+        "reportingTime": "2026-01-10 14:15:00",
+        "status": "protected",
+        "expiryDate": "2026-04-10",
+        "crmOwner": "汪五",
+        "followupStatus": "following",
+        "opportunityStage": "developing",
+        "province": "四川省",
+        "city": "成都市",
+        "industry": "零售业",
+        "enterpriseScale": "201-500人",
+        "contactName": "李负责人",
+        "contactPosition": "总经理",
+        "contactPhone": "13912345678",
+        "voucherImages": [
+            "/temp/voucher2.png"
+        ],
+        "expectedAmount": 120,
+        "expectedDate": "2026-03-31"
+    },
+    {
+        "id": "BB202601080003",
+        "customerName": "成都某某电子大王",
+        "taxId": "91510100MA00000003",
+        "channelId": "CH2024003",
+        "channelName": "北京某某信息咨询有限公司",
+        "channelOwner": "李四",
+        "reportingTime": "2026-01-08 09:15:00",
+        "status": "protected",
+        "expiryDate": "2026-04-08",
+        "followupStatus": "not_started",
+        "opportunityStage": "none",
+        "province": "四川省",
+        "city": "成都市",
+        "industry": "电子信息",
+        "enterpriseScale": "501-1000人",
+        "contactName": "陈主管",
+        "contactPosition": "信息化部负责人",
+        "contactPhone": "13766668888",
+        "voucherImages": [
+            "/temp/voucher3.png"
+        ]
+    },
+    {
+        "id": "BB202511150004",
+        "customerName": "成都某某供应链公司",
+        "taxId": "91510100MA00000004",
+        "channelId": "CH2024004",
+        "channelName": "上海某某战略合作伙伴",
+        "channelOwner": "王五",
+        "reportingTime": "2025-11-15 11:20:00",
+        "status": "converted",
+        "crmOwner": "赵六",
+        "followupStatus": "customer_associated",
+        "opportunityStage": "closed",
+        "orderStatus": "signed",
+        "contractAmount": 80,
+        "paidAmount": 40,
+        "province": "四川省",
+        "city": "成都市",
+        "industry": "物流仓储",
+        "enterpriseScale": "1000人以上",
+        "contactName": "刘经理",
+        "contactPosition": "供应链专家",
+        "contactPhone": "13611112222",
+        "voucherImages": [
+            "/temp/voucher4.png"
+        ]
+    }
+]
