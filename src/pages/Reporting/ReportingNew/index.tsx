@@ -317,27 +317,38 @@ const ReportingNew: FC = () => {
                 </Card>
 
                 {/* 联系信息 */}
-                <Card title="联系信息" style={{ marginBottom: 24 }}>
+                <Card
+                    title={
+                        <Space>
+                            <span>对接人信息</span>
+                            <Text style={{ color: '#ff4d4f', fontWeight: 'normal', fontSize: 14, marginLeft: 8 }}>
+                                信息仅用于报备查重与权益锁定，我们会严格保护您的客户资源。
+                            </Text>
+                        </Space>
+                    }
+                    style={{ marginBottom: 24 }}
+                >
                     <Row gutter={24}>
                         <Col span={8}>
-                            <Form.Item name="contactName" label="联系人" rules={[{ required: true, max: 20 }]}>
+                            <Form.Item name="contactName" label="联系人姓名" rules={[{ required: true, max: 20 }]}>
                                 <Input placeholder="客户方对接人姓名" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item name="contactPosition" label="联系人岗位" rules={[{ required: true, max: 20 }]}>
-                                <Input placeholder="客户方对接人职位" />
                             </Form.Item>
                         </Col>
                         <Col span={8}>
                             <Form.Item
                                 name="contactPhone"
-                                label="联系电话"
+                                label="客户方对接人联系电话"
                                 rules={[{ required: true, pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' }]}
                             >
                                 <Input placeholder="11 位手机号" />
                             </Form.Item>
                         </Col>
+                        <Col span={8}>
+                            <Form.Item name="contactPosition" label="岗位" rules={[{ required: true, max: 20 }]}>
+                                <Input placeholder="客户方对接人职位" />
+                            </Form.Item>
+                        </Col>
+
                     </Row>
                 </Card>
 
@@ -372,46 +383,14 @@ const ReportingNew: FC = () => {
                         </Upload>
                     </Form.Item>
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                        请上传渠道伙伴提供的报备表截图，或能证明客户归属的聊天截图，单个文件 ≤ 10MB，支持多张
+                        请上传能证明客户归属的聊天截图，单个文件 ≤ 10MB，支持多张
                     </Text>
-                </Card>
-
-                {/* 商机信息 */}
-                <Card title="商机信息 (选填)" style={{ marginBottom: 24 }}>
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="expectedAmount" label="预计成交金额 (万元)">
-                                <InputNumber placeholder="0.00" style={{ width: '100%' }} precision={2} />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="expectedDate" label="预计成交日期">
-                                <DatePicker style={{ width: '100%' }} />
-                            </Form.Item>
-                        </Col>
-                        <Col span={24}>
-                            <Form.Item name="opportunityDesc" label="商机描述" rules={[{ max: 500 }]}>
-                                <TextArea rows={4} placeholder="请描述客户需求及推进进展，最大 500 字符" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={24}>
-                            <Form.Item name="progressImages" label="对接推进截图">
-                                <Upload
-                                    listType="picture"
-                                    action="/api/upload"
-                                    beforeUpload={() => false}
-                                >
-                                    <Button icon={<UploadOutlined />}>上传沟通记录/名片等</Button>
-                                </Upload>
-                            </Form.Item>
-                        </Col>
-                    </Row>
                 </Card>
             </Form>
 
             <Alert
                 message="重要提示"
-                description="报备凭证和对接推进截图必须真实有效。后期商务核对时，若发现截图内容不真实，将默认为“自开拓”客户，不发放渠道佣金。"
+                description="为了保障您的佣金顺利结算，请务必提供真实有效的客户对接凭证。 注意： 凭证不实将导致报备失效及佣金无法发放，请您仔细核对。"
                 type="warning"
                 showIcon
                 style={{ marginBottom: 24 }}

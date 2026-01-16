@@ -227,8 +227,7 @@ const MonthlySettlementPage: FC = () => {
                             <Descriptions.Item label="结算单号">{currentSettlement.id}</Descriptions.Item>
                             <Descriptions.Item label="结算周期">{currentSettlement.cycle}</Descriptions.Item>
                             <Descriptions.Item label="渠道名称">{currentSettlement.channelName}</Descriptions.Item>
-                            <Descriptions.Item label="分佣类型">{currentSettlement.commissionType === 'ladder' ? '阶梯等级' : currentSettlement.commissionType === 'fixed' ? '固定比例' : '个性化'}</Descriptions.Item>
-                            <Descriptions.Item label="当前等级">{currentSettlement.level || '-'}</Descriptions.Item>
+                            <Descriptions.Item label="分佣类型">{currentSettlement.commissionType === 'custom_ladder' ? '阶梯分佣' : currentSettlement.commissionType === 'fixed' ? '固定分佣' : '协议分佣'}</Descriptions.Item>
                             <Descriptions.Item label="状态">{getStatusTag(currentSettlement.status, currentSettlement.isReconciled)}</Descriptions.Item>
                         </Descriptions>
 

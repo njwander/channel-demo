@@ -7,37 +7,32 @@ interface PerformanceChartProps {
     performance: {
         channelName: string;
         amount: number;
-        level?: string;
     }[];
-    channelLevels: {
-        gold: number;
-        silver: number;
-        bronze: number;
+    ruleDistribution: {
+        ladder: number;
+        fixed: number;
+        personalized: number;
     };
 }
 
-export const PerformanceChart: FC<PerformanceChartProps> = ({ performance, channelLevels }) => {
+export const PerformanceChart: FC<PerformanceChartProps> = ({ performance = [], ruleDistribution = { ladder: 0, fixed: 0, personalized: 0 } }) => {
     const maxAmount = Math.max(...performance.map(p => p.amount), 1);
 
     // Calculate percentages for donut chart
-    const totalLevels = channelLevels.gold + channelLevels.silver + channelLevels.bronze;
-    const goldP = totalLevels ? (channelLevels.gold / totalLevels) * 100 : 0;
-    const silverP = totalLevels ? (channelLevels.silver / totalLevels) * 100 : 0;
+    const totalRules = ruleDistribution.ladder + ruleDistribution.fixed + ruleDistribution.personalized;
+    const ladderP = totalRules ? (ruleDistribution.ladder / totalRules) * 100 : 0;
+    const fixedP = totalRules ? (ruleDistribution.fixed / totalRules) * 100 : 0;
 
-    // Create conic-gradient string for donut chart
-    // Gold starts at 0
-    // Silver starts at gold
-    // Bronze starts at gold + silver
     const donutStyle = {
         width: '160px',
         height: '160px',
         borderRadius: '50%',
-        background: totalLevels === 0
+        background: totalRules === 0
             ? '#f0f0f0'
             : `conic-gradient(
-            #faad14 0% ${goldP}%,
-            #d9d9d9 ${goldP}% ${goldP + silverP}%,
-            #b8741a ${goldP + silverP}% 100%
+            #ff4d4f 0% ${ladderP}%,
+            #1890ff ${ladderP}% ${ladderP + fixedP}%,
+            #b37feb ${ladderP + fixedP}% 100%
         )`,
         position: 'relative' as const,
         margin: '0 auto',
@@ -57,7 +52,7 @@ export const PerformanceChart: FC<PerformanceChartProps> = ({ performance, chann
     return (
         <Row gutter={24} style={{ marginBottom: 24 }}>
             <Col span={14}>
-                <Card title="渠道业绩概览 (Top 5)" bordered={false} bodyStyle={{ height: 300, overflowY: 'auto' }}>
+                <Card title="渠道业绩概览 (Top 5)" variant="borderless" styles={{ body: { height: 300, overflowY: 'auto' } }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {performance.map(item => (
                             <div key={item.channelName}>
@@ -65,7 +60,7 @@ export const PerformanceChart: FC<PerformanceChartProps> = ({ performance, chann
                                     <Text strong>{item.channelName}</Text>
                                     <Text>{(item.amount / 10000).toFixed(1)}万</Text>
                                 </div>
-                                <Progress percent={(item.amount / maxAmount) * 100} showInfo={false} strokeColor="#1890ff" />
+                                <Progress percent={(item.amount / maxAmount) * 100} showInfo={false} strokeColor="#ff5050" />
                             </div>
                         ))}
                         {performance.length === 0 && <Text type="secondary">暂无业绩数据</Text>}
@@ -73,14 +68,14 @@ export const PerformanceChart: FC<PerformanceChartProps> = ({ performance, chann
                 </Card>
             </Col>
             <Col span={10}>
-                <Card title="渠道等级分布" bordered={false} bodyStyle={{ height: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <Card title="分佣规则分布" variant="borderless" styles={{ body: { height: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' } }}>
                     <div style={donutStyle}>
                         <div style={holeStyle} />
                     </div>
-                    <Space style={{ marginTop: 24 }}>
-                        <Space><div style={{ width: 8, height: 8, background: '#faad14', borderRadius: '50%' }} /> 金牌 {channelLevels.gold}</Space>
-                        <Space><div style={{ width: 8, height: 8, background: '#d9d9d9', borderRadius: '50%' }} /> 银牌 {channelLevels.silver}</Space>
-                        <Space><div style={{ width: 8, height: 8, background: '#b8741a', borderRadius: '50%' }} /> 铜牌 {channelLevels.bronze}</Space>
+                    <Space direction="vertical" style={{ marginTop: 16 }}>
+                        <Space><div style={{ width: 8, height: 8, background: '#ff4d4f', borderRadius: '50%' }} /> 阶梯分佣 {ruleDistribution.ladder}</Space>
+                        <Space><div style={{ width: 8, height: 8, background: '#1890ff', borderRadius: '50%' }} /> 固定分佣 {ruleDistribution.fixed}</Space>
+                        <Space><div style={{ width: 8, height: 8, background: '#b37feb', borderRadius: '50%' }} /> 协议分佣 {ruleDistribution.personalized}</Space>
                     </Space>
                 </Card>
             </Col>

@@ -31,7 +31,7 @@ export const ReportingFunnel: FC<ReportingFunnelProps> = ({ funnel }) => {
     const conversionRate = funnel.total > 0 ? ((funnel.signed / funnel.total) * 100).toFixed(1) : '0.0';
 
     return (
-        <Card title="报备转化漏斗" extra={<Text type="secondary">整体转化率: {conversionRate}%</Text>} bordered={false} bodyStyle={{ height: 300, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Card title="报备转化漏斗" extra={<Text type="secondary">整体转化率: {conversionRate}%</Text>} variant="borderless" styles={{ body: { height: 300, display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                 {stages.map((stage, index) => {
                     const widthPercent = (stage.value / maxVal) * 100;

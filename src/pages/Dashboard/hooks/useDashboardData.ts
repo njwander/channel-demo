@@ -37,12 +37,11 @@ export interface DashboardData {
     performance: {
         channelName: string;
         amount: number;
-        level?: string;
     }[];
-    channelLevels: {
-        gold: number;
-        silver: number;
-        bronze: number;
+    ruleDistribution: {
+        ladder: number;
+        fixed: number;
+        personalized: number;
     };
     funnel: {
         total: number;
@@ -86,14 +85,14 @@ export const useDashboardData = () => {
                 const nextMonth = now.add(30, 'day');
 
                 const activeChannels = channels.filter(c => c.status === 'active');
-                const expiringChannels = channels.filter(c => c.status === 'active' && dayjs(c.contractEndDate).isBefore(nextMonth) && dayjs(c.contractEndDate).isAfter(now));
-                const newChannelsThisMonth = channels.filter(c => dayjs(c.contractStartDate).isSame(now, 'month'));
+                const expiringChannels = channels.filter(c => c.status === 'active' && dayjs(c.endDate).isBefore(nextMonth) && dayjs(c.endDate).isAfter(now));
+                const newChannelsThisMonth = channels.filter(c => dayjs(c.startDate).isSame(now, 'month'));
 
-                // Channel Levels
-                const channelLevels = {
-                    gold: channels.filter(c => c.level === 'gold').length,
-                    silver: channels.filter(c => c.level === 'silver').length,
-                    bronze: channels.filter(c => c.level === 'bronze').length,
+                // Commission Type Distribution
+                const ruleDistribution = {
+                    ladder: channels.filter(c => c.commissionType === 'custom_ladder').length,
+                    fixed: channels.filter(c => c.commissionType === 'fixed').length,
+                    personalized: channels.filter(c => c.commissionType === 'personalized').length,
                 };
 
                 // Performance (Mock based on cumulativePerformance field if exists, else random/mock)
@@ -101,9 +100,8 @@ export const useDashboardData = () => {
                 // Looking at Channel type (inferred), let's assume we map from mock data.
                 const performance = channels
                     .map(c => ({
-                        channelName: c.name,
-                        amount: (c as any).cumulativePerformance || Math.floor(Math.random() * 1000000), // Mock if missing
-                        level: c.level
+                        channelName: c.companyName,
+                        amount: c.ytdPerformance || (c as any).cumulativePerformance || Math.floor(Math.random() * 1000000), // Fallback for old data
                     }))
                     .sort((a, b) => b.amount - a.amount)
                     .slice(0, 5);
@@ -117,7 +115,7 @@ export const useDashboardData = () => {
                 const convertedReports = reports.filter(r => r.status === 'converted');
                 const newReportsThisMonth = reports.filter(r => dayjs(r.reportingTime).isSame(now, 'month'));
 
-                const expiringReports = reports.filter(r => r.status === 'protected' && dayjs(r.protectDeadline).isBefore(now.add(7, 'day')) && dayjs(r.protectDeadline).isAfter(now));
+                const expiringReports = reports.filter(r => r.status === 'protected' && dayjs((r as any).protectDeadline || (r as any).protectionDeadline).isBefore(now.add(7, 'day')) && dayjs((r as any).protectDeadline || (r as any).protectionDeadline).isAfter(now));
 
                 // 4. Todo Counts
                 // Settlement checks mock
@@ -127,12 +125,12 @@ export const useDashboardData = () => {
                 // 5. Funnel
                 const funnel = {
                     total: reports.length,
-                    following: reports.filter(r => r.processStatus === 'following').length,
-                    linked: reports.filter(r => r.processStatus === 'linked').length, // Assuming 'linked' status or similar exists
-                    opportunity: reports.filter(r => r.processStatus === 'opportunity').length,
-                    deal: reports.filter(r => r.processStatus === 'deal').length,
-                    signed: reports.filter(r => r.processStatus === 'signed').length,
-                    paid: reports.filter(r => r.processStatus === 'paid').length,
+                    following: reports.filter(r => r.status === 'pending').length,
+                    linked: reports.filter(r => r.status === 'protected').length,
+                    opportunity: reports.filter(r => r.status === 'converted').length, // Simplified for mock
+                    deal: reports.filter(r => r.status === 'converted').length,
+                    signed: reports.filter(r => r.status === 'converted' && (r as any).orderStatus === 'fully_paid').length,
+                    paid: reports.filter(r => r.status === 'converted' && (r as any).orderStatus === 'fully_paid').length,
                 };
 
                 // 6. Activities (Mock for visual richness)
@@ -169,7 +167,7 @@ export const useDashboardData = () => {
                         },
                     },
                     performance,
-                    channelLevels,
+                    ruleDistribution,
                     funnel,
                     activities,
                 });

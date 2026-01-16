@@ -1,0 +1,87 @@
+[
+    {
+        "id": "RULE_DEFAULT",
+        "name": "系统默认规则",
+        "type": "阶梯分佣",
+        "status": "enabled",
+        "isDefault": true,
+        "tiers": [
+            {
+                "min": 0,
+                "max": 50,
+                "rate": 20
+            },
+            {
+                "min": 50,
+                "max": 100,
+                "rate": 25
+            },
+            {
+                "min": 100,
+                "max": null,
+                "rate": 30
+            }
+        ],
+        "description": "这是系统最新的默认阶梯分佣规则",
+        "channelCount": 42,
+        "accumulatedPerformance": 1250.5,
+        "creator": "系统",
+        "createTime": "2026-01-13 10:00:00"
+    },
+    {
+        "id": "RULE_001",
+        "name": "2025新一代渠道激励计划",
+        "type": "阶梯分佣",
+        "status": "enabled",
+        "isDefault": false,
+        "tiers": [
+            {
+                "min": 0,
+                "max": 50,
+                "rate": 6
+            },
+            {
+                "min": 50,
+                "max": 200,
+                "rate": 10
+            },
+            {
+                "min": 200,
+                "max": null,
+                "rate": 15
+            }
+        ],
+        "channelCount": 15,
+        "accumulatedPerformance": 840.2,
+        "creator": "客服A",
+        "createTime": "2026-01-13 14:20:00"
+    },
+    {
+        "id": "RULE_002",
+        "name": "战略合作伙伴专属规则",
+        "type": "阶梯分佣",
+        "status": "enabled",
+        "isDefault": false,
+        "tiers": [
+            {
+                "min": 0,
+                "max": 100,
+                "rate": 8
+            },
+            {
+                "min": 100,
+                "max": 500,
+                "rate": 12
+            },
+            {
+                "min": 500,
+                "max": null,
+                "rate": 18
+            }
+        ],
+        "channelCount": 5,
+        "accumulatedPerformance": 2100.0,
+        "creator": "管理员",
+        "createTime": "2026-01-13 09:15:00"
+    }
+]

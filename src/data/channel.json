@@ -9,7 +9,8 @@
         "startDate": "2024-01-01",
         "endDate": "2024-12-31",
         "ytdPerformance": 120.0,
-        "owner": "张三"
+        "owner": "张三",
+        "detailedAddress": "上海市浦东新区张江高科苑路88号"
     },
     {
         "id": "CH2024002",
@@ -21,7 +22,8 @@
         "startDate": "2024-03-15",
         "endDate": "2025-03-14",
         "ytdPerformance": 85.0,
-        "owner": "张三"
+        "owner": "张三",
+        "detailedAddress": "杭州市余杭区文一西路999号"
     },
     {
         "id": "CH2024003",

@@ -53,7 +53,7 @@ export const ToDoList: FC<ToDoListProps> = ({ todos }) => {
     // Fallback if empty
     if (items.length === 0) {
         return (
-            <Card title="待办事项" bordered={false} bodyStyle={{ padding: '24px' }} style={{ marginBottom: 24 }}>
+            <Card title="待办事项" variant="borderless" styles={{ body: { padding: '24px' } }} style={{ marginBottom: 24 }}>
                 <div style={{ textAlign: 'center', padding: '20px 0', color: '#999' }}>
                     <CheckCircleOutlined style={{ fontSize: 24, marginBottom: 8, color: '#52c41a' }} />
                     <div>🎉 暂无待办事项，继续保持！</div>
@@ -67,7 +67,7 @@ export const ToDoList: FC<ToDoListProps> = ({ todos }) => {
         <Card
             title="待办事项"
             extra={<Button type="link" onClick={() => { }}>查看全部待办 ({items.length})</Button>}
-            bordered={false}
+            variant="borderless"
             style={{ marginBottom: 24, boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)' }}
         >
             <List

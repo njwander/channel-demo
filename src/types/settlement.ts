@@ -22,8 +22,7 @@ export interface SettlementApplication {
     id: string                   // 申请单号
     companyName: string          // 公司全称
     city: string                 // 所在城市
-    scale: string                // 公司人数规模
-    industry: string             // 所属行业
+    detailedAddress?: string     // 详细地址
     contactName: string          // 联系人
     contactPhone: string         // 联系电话
     contactPosition: string      // 联系人职位
@@ -43,5 +42,6 @@ export interface SettlementApplication {
     auditStatus: SettlementStatus// 审批状态
     applyTime: string            // 申请日期 (YYYY-MM-DD)
     approvalDate?: string        // 审批通过日期 (YYYY-MM-DD)
+    ruleId?: string              // 分佣规则ID
     qualityCheckResults?: QualityCheckItem[] // 客户资源质检结果
 }

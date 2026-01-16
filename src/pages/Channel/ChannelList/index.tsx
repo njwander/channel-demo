@@ -27,7 +27,7 @@ import {
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
-import type { Channel, ChannelStatus, ChannelLevel, CommissionType } from '../../../types/channel'
+import type { Channel, ChannelStatus, CommissionType } from '../../../types/channel'
 
 const { Title } = Typography
 const { RangePicker } = DatePicker
@@ -119,14 +119,6 @@ const ChannelList: FC = () => {
                         filteredData = filteredData.filter(item => item.commissionType === values.commissionType)
                     }
 
-                    // 等级过滤
-                    if (values.level && values.level !== 'all') {
-                        if (values.level === 'none') {
-                            filteredData = filteredData.filter(item => !item.level)
-                        } else {
-                            filteredData = filteredData.filter(item => item.level === values.level)
-                        }
-                    }
 
                     // 负责人过滤
                     if (values.owner) {
@@ -243,17 +235,11 @@ const ChannelList: FC = () => {
 
     // 分佣类型映射
     const commissionTypeMap: Record<CommissionType, string> = {
-        ladder: '阶梯等级',
-        fixed: '固定比例',
-        personalized: '个性化'
+        custom_ladder: '阶梯分佣',
+        fixed: '固定分佣',
+        personalized: '协议分佣'
     }
 
-    // 等级映射
-    const levelMap: Record<ChannelLevel, { text: string; icon: string }> = {
-        gold: { text: '金牌', icon: '🥇' },
-        silver: { text: '银牌', icon: '🥈' },
-        bronze: { text: '铜牌', icon: '🥉' }
-    }
 
     const columns = [
         {
@@ -264,65 +250,16 @@ const ChannelList: FC = () => {
                 <a onClick={() => navigate(`/channel-detail/${record.id}`)}>{text}</a>
             ),
             ellipsis: true,
-            minWidth: 200
+            width: 200
         },
         {
             title: '状态',
             dataIndex: 'status',
             key: 'status',
-            width: 100,
+            width: 80,
             render: (status: ChannelStatus) => (
                 <Tag color={statusMap[status].color}>{statusMap[status].text}</Tag>
             )
-        },
-        {
-            title: '分佣类型',
-            dataIndex: 'commissionType',
-            key: 'commissionType',
-            width: 100,
-            render: (type: CommissionType) => commissionTypeMap[type]
-        },
-        {
-            title: '等级',
-            dataIndex: 'level',
-            key: 'level',
-            width: 100,
-            render: (level: ChannelLevel | undefined) => {
-                if (!level) return '-'
-                return (
-                    <Space>
-                        <span>{levelMap[level].icon}</span>
-                        <span>{levelMap[level].text}</span>
-                    </Space>
-                )
-            }
-        },
-        {
-            title: '分佣比例',
-            dataIndex: 'commissionRate',
-            key: 'commissionRate',
-            width: 100,
-            render: (text: string) => text || '-'
-        },
-        {
-            title: '开始日期',
-            dataIndex: 'startDate',
-            key: 'startDate',
-            width: 120
-        },
-        {
-            title: '截止日期',
-            dataIndex: 'endDate',
-            key: 'endDate',
-            width: 120,
-            render: (date: string, record: Channel) => {
-                const isExpiring = record.status === 'expiring'
-                return (
-                    <span style={{ color: isExpiring ? '#ff4d4f' : 'inherit', fontWeight: isExpiring ? 'bold' : 'normal' }}>
-                        {date}
-                    </span>
-                )
-            }
         },
         {
             title: '推荐客户数',
@@ -341,18 +278,19 @@ const ChannelList: FC = () => {
             sorter: (a: Channel, b: Channel) => (a.totalConverted || 0) - (b.totalConverted || 0)
         },
         {
-            title: '最近成交时间',
-            dataIndex: 'lastConversionTime',
-            key: 'lastConversionTime',
-            width: 160
-        },
-        {
             title: '累计业绩',
             dataIndex: 'ytdPerformance',
             key: 'ytdPerformance',
             width: 120,
             align: 'right' as const,
             render: (val: number) => `${val.toFixed(1)} 万元`
+        },
+        {
+            title: '分佣类型',
+            dataIndex: 'commissionType',
+            key: 'commissionType',
+            width: 100,
+            render: (type: CommissionType) => commissionTypeMap[type]
         },
         {
             title: '负责人',
@@ -427,20 +365,9 @@ const ChannelList: FC = () => {
                             <Form.Item name="commissionType" label="分佣类型">
                                 <Select placeholder="请选择类型" allowClear>
                                     <Option value="all">全部</Option>
-                                    <Option value="ladder">阶梯等级</Option>
-                                    <Option value="fixed">固定比例</Option>
-                                    <Option value="personalized">个性化</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} md={8} lg={6}>
-                            <Form.Item name="level" label="等级">
-                                <Select placeholder="请选择等级" allowClear>
-                                    <Option value="all">全部</Option>
-                                    <Option value="gold">🥇 金牌</Option>
-                                    <Option value="silver">🥈 银牌</Option>
-                                    <Option value="bronze">🥉 铜牌</Option>
-                                    <Option value="none">无</Option>
+                                    <Option value="custom_ladder">阶梯分佣</Option>
+                                    <Option value="fixed">固定分佣</Option>
+                                    <Option value="personalized">协议分佣</Option>
                                 </Select>
                             </Form.Item>
                         </Col>

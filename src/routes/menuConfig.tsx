@@ -73,6 +73,12 @@ export const menuItems: MenuItem[] = [
                 icon: <EditOutlined />,
                 path: '/adjustment-management',
             },
+            {
+                key: 'commission-rules',
+                label: '分佣规则管理',
+                icon: <SettingOutlined />,
+                path: '/performance/commission-rules',
+            },
         ],
     } as MenuItem,
 ]

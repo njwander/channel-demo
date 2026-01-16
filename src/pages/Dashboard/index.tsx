@@ -17,8 +17,10 @@ const Dashboard: FC = () => {
 
     if (loading || !data) {
         return (
-            <div style={{ padding: 24, textAlign: 'center' }}>
-                <Spin size="large" tip="加载中..." />
+            <div style={{ padding: 48, textAlign: 'center' }}>
+                <Spin size="large">
+                    <div style={{ marginTop: 16 }}>加载中...</div>
+                </Spin>
             </div>
         );
     }
@@ -33,7 +35,7 @@ const Dashboard: FC = () => {
                 <Col span={12}>
                     <PerformanceChart
                         performance={data.performance}
-                        channelLevels={data.channelLevels}
+                        ruleDistribution={data.ruleDistribution}
                     />
                 </Col>
                 <Col span={12}>

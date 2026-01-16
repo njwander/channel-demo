@@ -14,6 +14,8 @@ import AdjustmentManagement from '../pages/Performance/AdjustmentManagement'
 import OrderReconciliation from '../pages/Performance/OrderReconciliation'
 import SalesOrderReconciliation from '../pages/Performance/SalesOrderReconciliation'
 import Termination from '../pages/Termination/Termination'
+import CommissionRuleList from '../pages/Performance/CommissionRuleList'
+import CommissionRuleConfig from '../pages/Performance/CommissionRuleConfig'
 import NotFound from '../pages/NotFound'
 import { useEffect } from 'react'
 import { initData } from '../utils/dataInitializer'
@@ -50,6 +52,8 @@ const AppRoutes = () => {
                 <Route path="adjustment-management" element={<AdjustmentManagement />} />
                 <Route path="order-reconciliation" element={<OrderReconciliation />} />
                 <Route path="sales-order-reconciliation" element={<SalesOrderReconciliation />} />
+                <Route path="performance/commission-rules" element={<CommissionRuleList />} />
+                <Route path="performance/commission-rules/config/:id" element={<CommissionRuleConfig />} />
 
                 {/* 渠道解约 */}
                 <Route path="termination" element={<Termination />} />

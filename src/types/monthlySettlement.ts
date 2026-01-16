@@ -1,4 +1,4 @@
-import { ChannelLevel, CommissionType } from './channel'
+import { CommissionType } from './channel'
 
 /**
  * 结算单状态
@@ -20,7 +20,7 @@ export interface SettlementOrderDetail {
  */
 export interface AdjustmentDetail {
     id: string
-    type: 'performance' | 'commission' // 业绩调账 (冲等级) | 分佣额调账 (发奖金)
+    type: 'performance' | 'commission' // 业绩调账 | 分佣额调账
     amount: number
     reason: string
     auditNo?: string
@@ -34,7 +34,6 @@ export interface MonthlySettlement {
     cycle: string                // 结算周期 (YYYY-MM)
     channelName: string          // 渠道名称
     commissionType: CommissionType // 分佣类型
-    level?: ChannelLevel         // 当前等级 (仅阶梯等级类型)
     orderCount: number           // 成交订单数
     orderAmount: number          // 成交金额 (万元)
     rate: string                 // 分佣比例 (如 "12%", "按约定")

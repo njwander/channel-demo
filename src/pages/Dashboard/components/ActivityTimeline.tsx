@@ -40,7 +40,7 @@ export const ActivityTimeline: FC<ActivityTimelineProps> = ({ activities }) => {
 
 
     return (
-        <Card title="近期动态" bordered={false} bodyStyle={{ padding: '24px 24px 0 24px', maxHeight: 300, overflowY: 'auto' }}>
+        <Card title="近期动态" variant="borderless" styles={{ body: { padding: '24px 24px 0 24px', maxHeight: 300, overflowY: 'auto' } }}>
             <Timeline
                 items={activities.map(item => ({
                     dot: getIcon(item.type),
