@@ -114,26 +114,14 @@ const SettlementList: FC = () => {
             title: '渠道名称',
             dataIndex: 'companyName',
             key: 'companyName',
-            ellipsis: true
+            ellipsis: true,
+            width: 200
         },
         {
             title: '所在城市',
             dataIndex: 'city',
             key: 'city',
             width: 100
-        },
-        {
-            title: '联系人',
-            dataIndex: 'contactName',
-            key: 'contactName',
-            width: 100
-        },
-        {
-            title: '推荐人',
-            dataIndex: 'referrer',
-            key: 'referrer',
-            width: 100,
-            render: (text: string) => text || '-'
         },
         {
             title: '负责人',
@@ -166,7 +154,6 @@ const SettlementList: FC = () => {
         {
             title: '操作',
             key: 'action',
-            width: 120,
             render: (_: any, record: SettlementApplication) => (
                 <Space size="middle">
                     <Tooltip title="查看详情">
@@ -203,20 +190,12 @@ const SettlementList: FC = () => {
                 <Typography.Title level={4} style={{ margin: 0 }}>入驻申请列表</Typography.Title>
                 <Space>
                     <Button
-                        type="link"
-                        icon={<DownloadOutlined />}
-                        href="/templates/20231204-影刀营销合作协议书-标准合同.docx"
-                        download
-                    >
-                        下载合同模板
-                    </Button>
-                    <Button
                         type="primary"
                         icon={<PlusOutlined />}
                         onClick={() => navigate('/settlement-new')}
                         style={{ background: '#ff5050', borderColor: '#ff5050' }}
                     >
-                        新建入驻申请
+                        入驻申请
                     </Button>
                 </Space>
             </div>

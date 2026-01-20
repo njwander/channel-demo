@@ -100,14 +100,14 @@ const SettlementQualityCheck: FC = () => {
             }
         },
         {
-            title: 'CRM 存在状态',
+            title: 'CRM查重',
             key: 'crmStatus',
             width: 180,
             render: (_: any, record: QualityCheckItem) => (
                 record.crmExists ? (
-                    <Tag color="warning">已存在 (ID: {record.crmId})</Tag>
+                    <Tag color="warning">已有客户</Tag>
                 ) : (
-                    <Tag color="success">不存在 (新客户)</Tag>
+                    <Tag color="success">新客户</Tag>
                 )
             )
         }
@@ -142,29 +142,19 @@ const SettlementQualityCheck: FC = () => {
 
             {/* 汇总统计区 */}
             <Row gutter={16} style={{ marginBottom: 24 }}>
-                <Col span={4.8} style={{ width: '20%' }}>
+                <Col span={8} style={{ width: '20%' }}>
                     <Card size="small">
                         <Statistic title="提交客户数" value={stats.total} />
                     </Card>
                 </Col>
-                <Col span={4.8} style={{ width: '20%' }}>
-                    <Card size="small">
-                        <Statistic title="工商校验通过" value={stats.pass} valueStyle={{ color: '#52c41a' }} />
-                    </Card>
-                </Col>
-                <Col span={4.8} style={{ width: '20%' }}>
+                <Col span={8} style={{ width: '20%' }}>
                     <Card size="small">
                         <Statistic title="工商校验失败" value={stats.fail} valueStyle={{ color: '#ff4d4f' }} />
                     </Card>
                 </Col>
-                <Col span={4.8} style={{ width: '20%' }}>
+                <Col span={8} style={{ width: '20%' }}>
                     <Card size="small">
                         <Statistic title="CRM 已存在" value={stats.crmExists} valueStyle={{ color: '#faad14' }} />
-                    </Card>
-                </Col>
-                <Col span={4.8} style={{ width: '20%' }}>
-                    <Card size="small">
-                        <Statistic title="CRM 不存在" value={stats.crmNew} valueStyle={{ color: '#52c41a' }} />
                     </Card>
                 </Col>
             </Row>

@@ -254,15 +254,6 @@ const SettlementNew: FC = () => {
                     <Title level={4} style={{ margin: 0 }}>新建入驻申请</Title>
                 </Space>
                 <Space>
-                    {currentStep === 0 && (
-                        <Button
-                            icon={<RobotOutlined />}
-                            onClick={startAnalysis}
-                            loading={analyzing}
-                        >
-                            智能解析
-                        </Button>
-                    )}
                     {currentStep === 0 ? (
                         <Button
                             type="primary"
@@ -324,6 +315,16 @@ const SettlementNew: FC = () => {
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
+                                    <Form.Item name="socialCreditCode" label="统一社会信用代码"
+                                        validateTrigger="onBlur"
+                                        rules={[
+                                            { required: true, message: '请填写统一社会信用代码' }
+                                        ]}
+                                    >
+                                        <Input placeholder="18位信用代码" />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={12}>
                                     <Form.Item name="city" label="所在城市" rules={[{ required: true }]}>
                                         <Select placeholder="请选择">
                                             <Option value="上海">上海</Option>
@@ -334,32 +335,38 @@ const SettlementNew: FC = () => {
                                         </Select>
                                     </Form.Item>
                                 </Col>
-                                <Col span={24}>
+                                <Col span={12}>
                                     <Form.Item name="detailedAddress" label="详细地址">
                                         <Input placeholder="请填写详细地址" />
                                     </Form.Item>
                                 </Col>
+
                             </Row>
                         </Card>
 
                         {/* 联系信息 */}
                         <Card title="联系信息" style={{ marginBottom: 24 }}>
                             <Row gutter={24}>
-                                <Col span={8}>
+                                <Col span={12}>
                                     <Form.Item name="contactName" label="联系人" rules={[{ required: true, max: 20 }]}>
                                         <Input placeholder="最大 20 字符" />
                                     </Form.Item>
                                 </Col>
-                                <Col span={8}>
+                                <Col span={12}>
                                     <Form.Item
                                         name="contactPhone"
                                         label="联系电话"
-                                        rules={[{ required: true, pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' }]}
+                                        rules={[{ required: true, message: '请输入正确的手机号' }]}
                                     >
                                         <Input placeholder="11 位手机号" />
                                     </Form.Item>
                                 </Col>
-                                <Col span={8}>
+                                <Col span={12}>
+                                    <Form.Item name="contactEmail" label="联系邮箱" rules={[{ required: true, message: '格式错误' }]}>
+                                        <Input placeholder="用于接收电子账单" />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={12}>
                                     <Form.Item name="contactPosition" label="联系人职位" rules={[{ required: true }]}>
                                         <Select placeholder="请选择职位">
                                             <Option value="CEO">CEO</Option>
@@ -371,53 +378,6 @@ const SettlementNew: FC = () => {
                                             <Option value="其它">其它</Option>
                                         </Select>
                                     </Form.Item>
-                                </Col>
-                                <Col span={8}>
-                                    <Form.Item name="contactEmail" label="联系邮箱" rules={[{ type: 'email', message: '格式错误' }]}>
-                                        <Input placeholder="用于接收电子账单" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={8}>
-                                    <Form.Item name="referrer" label="推荐人" rules={[{ max: 20 }]}>
-                                        <Input placeholder="最大 20 字符" />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                        </Card>
-
-                        {/* 工商信息 */}
-                        <Card title="工商信息" style={{ marginBottom: 24 }}>
-                            <Row gutter={24}>
-                                <Col span={8}>
-                                    <Form.Item name="businessLicense" label="营业执照副本">
-                                        <Upload
-                                            listType="picture"
-                                            maxCount={1}
-                                            beforeUpload={(file) => beforeUpload(file, 10)}
-                                        >
-                                            <Button icon={<UploadOutlined />}>上传图片</Button>
-                                        </Upload>
-                                        <Text type="secondary" style={{ fontSize: 12 }}>支持 JPG/PNG，不超过 10MB</Text>
-                                    </Form.Item>
-                                </Col>
-                                <Col span={16}>
-                                    <Row gutter={16}>
-                                        <Col span={12}>
-                                            <Form.Item name="socialCreditCode" label="统一社会信用代码">
-                                                <Input placeholder="18位信用代码" />
-                                            </Form.Item>
-                                        </Col>
-                                        <Col span={12}>
-                                            <Form.Item name="bankInfo" label="开户行及账号">
-                                                <Input placeholder="选填" />
-                                            </Form.Item>
-                                        </Col>
-                                        <Col span={24}>
-                                            <Form.Item name="address" label="注册地址">
-                                                <Cascader options={AREA_OPTIONS} placeholder="请选择省市区" />
-                                            </Form.Item>
-                                        </Col>
-                                    </Row>
                                 </Col>
                             </Row>
                         </Card>
@@ -435,32 +395,6 @@ const SettlementNew: FC = () => {
 
                     {/* 第二步：商务合作信息 */}
                     <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-                        {/* 合作信息 */}
-                        <Card title="合作信息" style={{ marginBottom: 24 }}>
-                            <Row gutter={24}>
-                                <Col span={8}>
-                                    <Form.Item name="contract" label="签约合同">
-                                        <Upload
-                                            listType="picture"
-                                            maxCount={1}
-                                            beforeUpload={(file) => beforeUpload(file, 20)}
-                                        >
-                                            <Button icon={<UploadOutlined />}>上传 PDF/图片</Button>
-                                        </Upload>
-                                        <Text type="secondary" style={{ fontSize: 12 }}>单个文件 ≤ 20MB</Text>
-                                    </Form.Item>
-                                </Col>
-                                <Col span={8}>
-                                    <Form.Item name="cooperationDate" label="合作周期" rules={[{ required: true, message: '请选择合作周期' }]}>
-                                        <RangePicker
-                                            style={{ width: '100%' }}
-                                            onChange={handleDateChange}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                        </Card>
-
                         {/* 分佣配置 */}
                         <Card title="分佣配置" style={{ marginBottom: 24 }}>
                             <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.commissionType !== currentValues.commissionType}>

@@ -27,17 +27,18 @@ export const menuItems: MenuItem[] = [
         path: '/dashboard',
     } as MenuItem,
     {
-        key: 'settlement',
-        label: '入驻申请',
-        icon: <FormOutlined />,
-        path: '/settlement-list',
-    } as MenuItem,
-    {
         key: 'channel',
         label: '渠道列表',
         icon: <UnorderedListOutlined />,
         path: '/channel-list',
     } as MenuItem,
+    {
+        key: 'settlement',
+        label: '入驻申请',
+        icon: <FormOutlined />,
+        path: '/settlement-list',
+    } as MenuItem,
+
     {
         key: 'reporting',
         label: '客户报备',
