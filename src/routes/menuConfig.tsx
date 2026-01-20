@@ -63,12 +63,6 @@ export const menuItems: MenuItem[] = [
                 path: '/order-reconciliation',
             },
             {
-                key: 'sales-order-reconciliation',
-                label: '销售订单核对',
-                icon: <FileTextOutlined />,
-                path: '/sales-order-reconciliation',
-            },
-            {
                 key: 'adjustment-management',
                 label: '调账管理',
                 icon: <EditOutlined />,

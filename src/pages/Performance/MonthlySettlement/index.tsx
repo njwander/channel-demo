@@ -76,7 +76,7 @@ const MonthlySettlementPage: FC = () => {
         Modal.confirm({
             title: isLocked ? '确认进行轧账？' : '确认解除轧账？',
             content: isLocked
-                ? '锁定结算后，该周期内的 销售订单核对 和 渠道订单核对 将被锁定，无法再进行变更（确认/异议）。'
+                ? '锁定结算后，该周期内的 渠道订单核对 将被锁定，无法再进行变更（确认/异议）。'
                 : '解锁结算后，相关核对单将恢复可编辑状态。',
             onOk: () => {
                 const newData = data.map(item =>

@@ -12,7 +12,6 @@ import ReportingDetail from '../pages/Reporting/ReportingDetail'
 import MonthlySettlement from '../pages/Performance/MonthlySettlement'
 import AdjustmentManagement from '../pages/Performance/AdjustmentManagement'
 import OrderReconciliation from '../pages/Performance/OrderReconciliation'
-import SalesOrderReconciliation from '../pages/Performance/SalesOrderReconciliation'
 import Termination from '../pages/Termination/Termination'
 import CommissionRuleList from '../pages/Performance/CommissionRuleList'
 import CommissionRuleConfig from '../pages/Performance/CommissionRuleConfig'
@@ -51,7 +50,6 @@ const AppRoutes = () => {
                 <Route path="monthly-settlement" element={<MonthlySettlement />} />
                 <Route path="adjustment-management" element={<AdjustmentManagement />} />
                 <Route path="order-reconciliation" element={<OrderReconciliation />} />
-                <Route path="sales-order-reconciliation" element={<SalesOrderReconciliation />} />
                 <Route path="performance/commission-rules" element={<CommissionRuleList />} />
                 <Route path="performance/commission-rules/config/:id" element={<CommissionRuleConfig />} />
 
