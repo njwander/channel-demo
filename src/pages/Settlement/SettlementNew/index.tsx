@@ -12,27 +12,27 @@ import {
     DatePicker,
     Upload,
     message,
-    Divider,
     Modal,
     Cascader,
     Steps,
-    ConfigProvider
+    Divider,
+    Tag
 } from 'antd'
 import {
-    RobotOutlined,
-    UploadOutlined,
+    PlusOutlined,
     ArrowLeftOutlined,
     SaveOutlined,
-    SyncOutlined,
-    InboxOutlined
+    InboxOutlined,
+    CheckCircleFilled,
+    SettingOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import type { SettlementApplication } from '../../../types/settlement'
 import type { CommissionRule } from '../../../types/commissionRule'
 import ruleData from '../../../data/commission_rules.json'
+import NewRuleForm from './components/NewRuleForm'
 
-const { RangePicker } = DatePicker
 const { Title, Text } = Typography
 const { Option } = Select
 const { TextArea } = Input
@@ -68,31 +68,28 @@ const SettlementNew: FC = () => {
     const navigate = useNavigate()
     const [form] = Form.useForm()
     const [submitting, setSubmitting] = useState(false)
-    const [analyzing, setAnalyzing] = useState(false)
     const [uploadModalVisible, setUploadModalVisible] = useState(false)
     const [rules, setRules] = useState<CommissionRule[]>([])
     const [currentStep, setCurrentStep] = useState(0)
 
+    // 特殊分佣模式相关
+    const [isSpecialMode, setIsSpecialMode] = useState(false)
+    const [isNewRuleModalOpen, setIsNewRuleModalOpen] = useState(false)
+    const [selectedRuleId, setSelectedRuleId] = useState<string>('RULE_DEFAULT')
+
     // 获取规则数据
     useEffect(() => {
         const storedRules = localStorage.getItem('commission_rules')
-        if (storedRules) {
-            const parsedRules: CommissionRule[] = JSON.parse(storedRules)
-            setRules(parsedRules)
-            // 预选默认规则
-            const defaultRule = parsedRules.find(r => r.isDefault)
-            if (defaultRule) {
-                form.setFieldsValue({ ruleId: defaultRule.id })
-            }
-        } else {
-            const initialRules = ruleData as CommissionRule[]
-            setRules(initialRules)
-            const defaultRule = initialRules.find(r => r.isDefault)
-            if (defaultRule) {
-                form.setFieldsValue({ ruleId: defaultRule.id })
-            }
+        const initialRules: CommissionRule[] = storedRules ? JSON.parse(storedRules) : (ruleData as CommissionRule[])
+        setRules(initialRules)
+
+        // 默认规则
+        const defaultRule = initialRules.find(r => r.isDefault) || initialRules[0]
+        if (defaultRule) {
+            setSelectedRuleId(defaultRule.id)
+            form.setFieldsValue({ ruleId: defaultRule.id })
         }
-    }, [])
+    }, [form])
 
     // 校验公司名称唯一性
     const checkDuplicateCompanyName = async (_: any, value: string) => {
@@ -101,16 +98,11 @@ const SettlementNew: FC = () => {
         const storedData = localStorage.getItem('settlement_data')
         const allRecords: SettlementApplication[] = storedData ? JSON.parse(storedData) : []
 
-        const exists = allRecords.some(r => r.companyName === value)
+        const exists = allRecords.some((r: SettlementApplication) => r.companyName === value)
         if (exists) {
             return Promise.reject(new Error('该公司已存在入驻记录'))
         }
         return Promise.resolve()
-    }
-
-    // 模拟智能解析流程
-    const startAnalysis = () => {
-        setUploadModalVisible(true)
     }
 
     // 模拟工商校验
@@ -134,7 +126,6 @@ const SettlementNew: FC = () => {
 
     const handleUploadOk = () => {
         setUploadModalVisible(false)
-        setAnalyzing(true)
         message.loading({ content: '正在智能识别营业执照...', key: 'analysis' })
 
         setTimeout(() => {
@@ -149,19 +140,17 @@ const SettlementNew: FC = () => {
                 contactPosition: '技术总监'
             })
             message.success({ content: '识别成功，已自动填充相关信息', key: 'analysis' })
-            setAnalyzing(false)
         }, 1500)
     }
 
     // 处理下一步
     const handleNext = async () => {
         try {
-            // 第一步校验字段：基本信息、联系信息、工商信息、客户资源证明
             await form.validateFields([
                 'companyName', 'city', 'detailedAddress',
-                'contactName', 'contactPhone', 'contactPosition', 'contactEmail', 'referrer',
-                'socialCreditCode', 'bankInfo', 'address',
-                'customerProof', 'industry', 'scale'
+                'contactName', 'contactPhone', 'contactPosition', 'contactEmail',
+                'socialCreditCode', 'address',
+                'customerProof'
             ])
             setCurrentStep(1)
             window.scrollTo(0, 0)
@@ -182,13 +171,11 @@ const SettlementNew: FC = () => {
             const values = await form.validateFields()
             setSubmitting(true)
 
-            // 生成顺序单号: SQ + yyyyMMdd + 4位顺序号
             const todayStr = dayjs().format('YYYYMMDD')
             const storedData = localStorage.getItem('settlement_data')
             const allRecords: SettlementApplication[] = storedData ? JSON.parse(storedData) : []
 
-            // 找出今天已有的单号，取最大的序号
-            const todayRecords = allRecords.filter(r => r.id.startsWith(`SQ${todayStr}`))
+            const todayRecords = allRecords.filter((r: SettlementApplication) => r.id.startsWith(`SQ${todayStr}`))
             let nextSeq = 1
             if (todayRecords.length > 0) {
                 const maxSeq = Math.max(...todayRecords.map(r => parseInt(r.id.slice(-4))))
@@ -202,20 +189,17 @@ const SettlementNew: FC = () => {
                 ...values,
                 city: Array.isArray(values.city) ? values.city.join('/') : values.city,
                 address: values.address ? (Array.isArray(values.address) ? values.address.join('/') : values.address) : '',
-                cooperationStartDate: values.cooperationDate[0].format('YYYY-MM-DD'),
-                cooperationEndDate: values.cooperationDate[1].format('YYYY-MM-DD'),
+                cooperationStartDate: dayjs().format('YYYY-MM-DD'),
+                cooperationEndDate: dayjs().add(1, 'year').format('YYYY-MM-DD'),
                 applyTime: dayjs().format('YYYY-MM-DD'),
                 auditStatus: 'pending',
                 signContractUrl: '/contracts/example.pdf',
                 businessLicenseUrl: '/licenses/example.jpg',
-                owner: '张三', // 默认为当前创建者
-                commissionType: values.commissionType === '阶梯分佣' ? 'custom_ladder' : (values.commissionType === '固定分佣' ? 'fixed' : 'personalized'),
-                commissionRate: values.commissionType === '固定分佣' ? Number(values.commissionRate) : undefined,
-                commissionDescription: values.commissionType === '协议分佣' ? values.commissionDescription : undefined,
-                ruleId: values.commissionType === '阶梯分佣' ? values.ruleId : undefined,
+                owner: '张三',
+                commissionType: '阶梯分佣',
+                ruleId: selectedRuleId,
             }
 
-            // 保存
             localStorage.setItem('settlement_data', JSON.stringify([newApp, ...allRecords]))
 
             message.success('提交成功，等待审批')
@@ -238,23 +222,22 @@ const SettlementNew: FC = () => {
         })
     }
 
-    // 自动推算合作截止日期
-    const handleDateChange = (dates: any) => {
-        if (dates && dates[0] && !dates[1]) {
-            form.setFieldsValue({
-                cooperationDate: [dates[0], dates[0].add(1, 'year')]
-            })
-        }
+    const handleRuleSelect = (value: string) => {
+        setSelectedRuleId(value)
+        form.setFieldsValue({ ruleId: value })
     }
 
-    // 文件校验
-    const beforeUpload = (file: any, maxSizeMB: number) => {
-        const isLtSize = file.size / 1024 / 1024 < maxSizeMB
-        if (!isLtSize) {
-            message.error(`文件大小不能超过 ${maxSizeMB}MB!`)
-        }
-        return isLtSize || Upload.LIST_IGNORE
+    const handleNewRuleSuccess = (newRule: CommissionRule) => {
+        const updatedRules = [...rules, newRule]
+        setRules(updatedRules)
+        localStorage.setItem('commission_rules', JSON.stringify(updatedRules))
+        setSelectedRuleId(newRule.id)
+        form.setFieldsValue({ ruleId: newRule.id })
+        setIsNewRuleModalOpen(false)
+        message.success('新规则已配置并应用')
     }
+
+    const currentRule = rules.find(r => r.id === selectedRuleId)
 
     return (
         <div style={{ padding: '0 24px 24px' }}>
@@ -312,16 +295,14 @@ const SettlementNew: FC = () => {
                 <Form
                     form={form}
                     layout="vertical"
-                    initialValues={{
-                        commissionType: '阶梯分佣'
-                    }}
                 >
                     {/* 第一步：基本与工商信息 */}
                     <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
-                        {/* 基本信息 */}
-                        <Card title="基本信息" style={{ marginBottom: 24 }}>
+                        <Card title="基本信息" style={{ marginBottom: 24 }} extra={
+                            <Button type="link" icon={<InboxOutlined />} onClick={() => setUploadModalVisible(true)}>智能解析营业执照</Button>
+                        }>
                             <Row gutter={24}>
-                                <Col span={12}>
+                                <Col span={24}>
                                     <Form.Item
                                         label="渠道公司全称"
                                         required
@@ -351,10 +332,7 @@ const SettlementNew: FC = () => {
                                 </Col>
                                 <Col span={12}>
                                     <Form.Item name="socialCreditCode" label="纳税人识别号"
-                                        validateTrigger="onBlur"
-                                        rules={[
-                                            { required: true, message: '请填写纳税人识别号/代码' }
-                                        ]}
+                                        rules={[{ required: true, message: '请填写纳税人识别号/代码' }]}
                                     >
                                         <Input placeholder="18位信用代码" />
                                     </Form.Item>
@@ -367,7 +345,7 @@ const SettlementNew: FC = () => {
                                         />
                                     </Form.Item>
                                 </Col>
-                                <Col span={12}>
+                                <Col span={24}>
                                     <Form.Item name="detailedAddress" label="详细地址">
                                         <Input placeholder="请填写详细地址" />
                                     </Form.Item>
@@ -375,7 +353,6 @@ const SettlementNew: FC = () => {
                             </Row>
                         </Card>
 
-                        {/* 联系信息 */}
                         <Card title="联系信息" style={{ marginBottom: 24 }}>
                             <Row gutter={24}>
                                 <Col span={12}>
@@ -393,7 +370,7 @@ const SettlementNew: FC = () => {
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
-                                    <Form.Item name="contactEmail" label="对接邮箱" rules={[{ required: true, type: 'email', message: '请输入正确的邮箱' }]}>
+                                    <Form.Item name="contactEmail" label="联系邮箱" rules={[{ required: true, message: '请输入正确的邮箱' }]}>
                                         <Input placeholder="用于接收电子账单" />
                                     </Form.Item>
                                 </Col>
@@ -401,11 +378,7 @@ const SettlementNew: FC = () => {
                                     <Form.Item name="contactPosition" label="担任职位" rules={[{ required: true }]}>
                                         <Select placeholder="请选择职位">
                                             <Option value="CEO">CEO</Option>
-                                            <Option value="运营负责人">运营负责人</Option>
-                                            <Option value="销售负责人">销售负责人</Option>
-                                            <Option value="IT负责人">IT负责人</Option>
-                                            <Option value="市场负责人">市场负责人</Option>
-                                            <Option value="CFO">CFO</Option>
+                                            <Option value="负责人">负责人</Option>
                                             <Option value="其它">其它</Option>
                                         </Select>
                                     </Form.Item>
@@ -413,11 +386,7 @@ const SettlementNew: FC = () => {
                             </Row>
                         </Card>
 
-                        {/* 客户资源证明 */}
                         <Card title="客户资源证明" style={{ marginBottom: 24 }}>
-                            <Typography.Paragraph type="secondary">
-                                客户清单用于入驻前的资源价值评估。
-                            </Typography.Paragraph>
                             <Form.Item name="customerProof" label="初期提报客户盘点">
                                 <TextArea rows={4} placeholder="请输入意向客户工商名称（每行一个）" />
                             </Form.Item>
@@ -426,97 +395,127 @@ const SettlementNew: FC = () => {
 
                     {/* 第二步：分佣配置信息 */}
                     <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-                        {/* 分佣配置 */}
-                        <Card title="分佣配置" style={{ marginBottom: 24 }}>
-                            <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.commissionType !== currentValues.commissionType}>
-                                {({ getFieldValue }) => {
-                                    const type = getFieldValue('commissionType')
-                                    return (
-                                        <Row gutter={24}>
-                                            <Col span={8}>
-                                                <Form.Item name="commissionType" label="分佣类型" rules={[{ required: true }]}>
-                                                    <Select>
-                                                        <Option value="阶梯分佣">阶梯分佣</Option>
-                                                        <Option value="固定分佣">固定分佣</Option>
-                                                        <Option value="协议分佣">协议分佣</Option>
-                                                    </Select>
-                                                </Form.Item>
-                                            </Col>
+                        <Card title="分佣配置" bordered={false} bodyStyle={{ padding: 0 }}>
+                            {!isSpecialMode ? (
+                                <div style={{
+                                    padding: '40px 24px',
+                                    textAlign: 'center',
+                                    background: '#fff',
+                                    borderRadius: 8,
+                                    border: '1px solid #f0f0f0'
+                                }}>
+                                    <CheckCircleFilled style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
+                                    <Title level={4}>影刀标准分佣规则</Title>
+                                    <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+                                        当前默认应用系统标准分佣规则，无需手动选择。
+                                    </Text>
 
-                                            {type === '阶梯分佣' && (
-                                                <>
-                                                    <Col span={8}>
-                                                        <Form.Item
-                                                            name="ruleId"
-                                                            label="分佣规则"
-                                                            rules={[{ required: true, message: '请选择分佣规则' }]}
-                                                        >
-                                                            <Select placeholder="请选择规则">
-                                                                {rules.filter(r => r.status === 'enabled').map(rule => (
-                                                                    <Option key={rule.id} value={rule.id}>{rule.name}</Option>
-                                                                ))}
-                                                            </Select>
-                                                        </Form.Item>
+                                    {currentRule && (
+                                        <div style={{
+                                            background: '#fafafa',
+                                            padding: '16px',
+                                            borderRadius: 8,
+                                            maxWidth: 500,
+                                            margin: '0 auto 32px',
+                                            textAlign: 'left'
+                                        }}>
+                                            <div style={{ marginBottom: 12 }}>
+                                                <Tag color="red">标准规则</Tag>
+                                                <Text strong>{currentRule.name}</Text>
+                                            </div>
+                                            <Space wrap size={[16, 8]}>
+                                                {currentRule.tiers.map((tier, idx) => (
+                                                    <div key={idx} style={{ fontSize: 13, color: '#666' }}>
+                                                        {tier.min}万 - {tier.max ? `${tier.max}万` : '以上'}：<Text strong style={{ color: '#ff5050' }}>{tier.rate}%</Text>
+                                                    </div>
+                                                ))}
+                                            </Space>
+                                        </div>
+                                    )}
+
+                                    <Divider />
+                                    <Button
+                                        icon={<SettingOutlined />}
+                                        onClick={() => setIsSpecialMode(true)}
+                                    >
+                                        申请特殊分佣规则
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Card style={{ background: '#fff', borderRadius: 8, border: '1px solid #ff5050' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                                        <Title level={5} style={{ margin: 0 }}>特殊分佣规则配置</Title>
+                                        <Button type="link" onClick={() => {
+                                            setIsSpecialMode(false)
+                                            setSelectedRuleId('RULE_DEFAULT')
+                                            form.setFieldsValue({ ruleId: 'RULE_DEFAULT' })
+                                        }}>恢复标准规则</Button>
+                                    </div>
+
+                                    <Form.Item label="选择已有规则" name="ruleId">
+                                        <div style={{ display: 'flex', gap: 12 }}>
+                                            <Select
+                                                style={{ flex: 1 }}
+                                                value={selectedRuleId}
+                                                onChange={handleRuleSelect}
+                                                placeholder="请选择规则"
+                                            >
+                                                {rules.map(rule => (
+                                                    <Option key={rule.id} value={rule.id}>
+                                                        {rule.name} {rule.isDefault && '(默认)'}
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                            <Button
+                                                type="primary"
+                                                icon={<PlusOutlined />}
+                                                onClick={() => setIsNewRuleModalOpen(true)}
+                                                style={{ background: '#ff5050', borderColor: '#ff5050' }}
+                                            >
+                                                配置新规则
+                                            </Button>
+                                        </div>
+                                    </Form.Item>
+
+                                    {currentRule && (
+                                        <div style={{ background: '#fafafa', padding: 20, borderRadius: 8 }}>
+                                            <div style={{ marginBottom: 16 }}>
+                                                <Text strong>规则明细：{currentRule.name}</Text>
+                                                {currentRule.description && (
+                                                    <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>{currentRule.description}</div>
+                                                )}
+                                            </div>
+                                            <Row gutter={[16, 16]}>
+                                                {currentRule.tiers.map((tier, idx) => (
+                                                    <Col key={idx} span={8}>
+                                                        <div style={{
+                                                            background: '#fff',
+                                                            padding: '12px',
+                                                            borderRadius: 4,
+                                                            border: '1px solid #eee',
+                                                            textAlign: 'center'
+                                                        }}>
+                                                            <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>
+                                                                {tier.min} {tier.max ? `- ${tier.max}` : '+'} 万
+                                                            </div>
+                                                            <div style={{ fontSize: 18, fontWeight: 'bold', color: '#ff5050' }}>
+                                                                {tier.rate}%
+                                                            </div>
+                                                        </div>
                                                     </Col>
-                                                    <Col span={24}>
-                                                        <Form.Item shouldUpdate={(prev, curr) => prev.ruleId !== curr.ruleId}>
-                                                            {({ getFieldValue }) => {
-                                                                const selectedRuleId = getFieldValue('ruleId');
-                                                                const rule = rules.find(r => r.id === selectedRuleId);
-                                                                if (!rule) return null;
-                                                                return (
-                                                                    <Card size="small" style={{ background: '#fafafa', border: '1px solid #f0f0f0' }}>
-                                                                        <div style={{ marginBottom: 8 }}><Text strong style={{ color: '#ff5050' }}>规则明细：{rule.name}</Text></div>
-                                                                        <Space wrap size={[24, 8]}>
-                                                                            {rule.tiers.map((tier, idx) => (
-                                                                                <div key={idx} style={{ fontSize: 13, color: '#666' }}>
-                                                                                    {tier.min}万 - {tier.max ? `${tier.max}万` : '以上'} ({tier.rate}%)
-                                                                                </div>
-                                                                            ))}
-                                                                        </Space>
-                                                                        {rule.description && <div style={{ marginTop: 8, fontSize: 12, color: '#999' }}>备注：{rule.description}</div>}
-                                                                    </Card>
-                                                                );
-                                                            }}
-                                                        </Form.Item>
-                                                    </Col>
-                                                </>
-                                            )}
-
-                                            {type === '固定分佣' && (
-                                                <Col span={8}>
-                                                    <Form.Item
-                                                        name="commissionRate"
-                                                        label="固定分佣比例 (%)"
-                                                        rules={[{ required: true, message: '请填写比例' }]}
-                                                    >
-                                                        <Input type="number" suffix="%" placeholder="0-100" />
-                                                    </Form.Item>
-                                                </Col>
-                                            )}
-
-                                            {type === '协议分佣' && (
-                                                <Col span={16}>
-                                                    <Form.Item
-                                                        name="commissionDescription"
-                                                        label="协议分佣说明"
-                                                        rules={[{ required: true, message: '请填写说明' }, { max: 500 }]}
-                                                    >
-                                                        <TextArea rows={1} placeholder="请描述特殊分佣建议，最大 500 字符" />
-                                                    </Form.Item>
-                                                </Col>
-                                            )}
-                                        </Row>
-                                    )
-                                }}
-                            </Form.Item>
+                                                ))}
+                                            </Row>
+                                        </div>
+                                    )}
+                                </Card>
+                            )}
                         </Card>
                     </div>
                 </Form >
             </div>
 
             {/* 智能解析上传弹窗 */}
-            < Modal
+            <Modal
                 title="营业执照智能识别"
                 open={uploadModalVisible}
                 onOk={handleUploadOk}
@@ -537,6 +536,21 @@ const SettlementNew: FC = () => {
                     </Upload.Dragger>
                 </div>
             </Modal >
+
+            {/* 配置新规则弹窗 */}
+            <Modal
+                title="配置新分佣规则"
+                open={isNewRuleModalOpen}
+                footer={null}
+                onCancel={() => setIsNewRuleModalOpen(false)}
+                width={600}
+                destroyOnClose
+            >
+                <NewRuleForm
+                    onCancel={() => setIsNewRuleModalOpen(false)}
+                    onSuccess={handleNewRuleSuccess}
+                />
+            </Modal>
         </div >
     )
 }

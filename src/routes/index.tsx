@@ -10,7 +10,7 @@ import ReportingList from '../pages/Reporting/ReportingList'
 import ReportingNew from '../pages/Reporting/ReportingNew'
 import ReportingDetail from '../pages/Reporting/ReportingDetail'
 import MonthlySettlement from '../pages/Performance/MonthlySettlement'
-import AdjustmentManagement from '../pages/Performance/AdjustmentManagement'
+
 import OrderReconciliation from '../pages/Performance/OrderReconciliation'
 import Termination from '../pages/Termination/Termination'
 import CommissionRuleList from '../pages/Performance/CommissionRuleList'
@@ -49,7 +49,7 @@ const AppRoutes = () => {
 
                 {/* 业绩管理 */}
                 <Route path="monthly-settlement" element={<MonthlySettlement />} />
-                <Route path="adjustment-management" element={<AdjustmentManagement />} />
+
                 <Route path="order-reconciliation" element={<OrderReconciliation />} />
                 <Route path="performance/commission-rules" element={<CommissionRuleList />} />
                 <Route path="performance/commission-rules/config/:id" element={<CommissionRuleConfig />} />

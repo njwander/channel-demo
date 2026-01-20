@@ -243,7 +243,7 @@ const ChannelList: FC = () => {
                 <a onClick={() => navigate(`/channel-detail/${record.id}`)}>{text}</a>
             ),
             ellipsis: true,
-            width: 200
+            width: 250
         },
         {
             title: '状态',
@@ -294,7 +294,6 @@ const ChannelList: FC = () => {
         {
             title: '操作',
             key: 'action',
-            width: 150,
             fixed: 'right' as const,
             render: (_: any, record: Channel) => (
                 <Space size="small">
@@ -346,39 +345,22 @@ const ChannelList: FC = () => {
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={12} md={8} lg={6}>
-                            <Form.Item name="commissionType" label="分佣类型">
-                                <Select placeholder="请选择类型" allowClear>
-                                    <Option value="all">全部</Option>
-                                    <Option value="custom_ladder">阶梯分佣</Option>
-                                    <Option value="fixed">固定分佣</Option>
-                                    <Option value="personalized">协议分佣</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} md={8} lg={6}>
                             <Form.Item name="owner" label="负责人">
                                 <Input placeholder="请输入负责人名称" allowClear />
                             </Form.Item>
                         </Col>
-                        <Col xs={24} sm={12} md={8} lg={6}>
-                            <Form.Item name="endDateRange" label="到期时间">
-                                <RangePicker style={{ width: '100%' }} />
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={24} md={24} lg={12} style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', marginBottom: 24 }}>
-                            <Space>
-                                <Button
-                                    type="primary"
-                                    icon={<SearchOutlined />}
-                                    htmlType="submit"
-                                    loading={searching}
-                                    style={{ background: '#ff5050', borderColor: '#ff5050' }}
-                                >
-                                    查询
-                                </Button>
-                                <Button icon={<SyncOutlined />} onClick={handleReset}>重置</Button>
-                            </Space>
-                        </Col>
+                        <Space>
+                            <Button
+                                type="primary"
+                                icon={<SearchOutlined />}
+                                htmlType="submit"
+                                loading={searching}
+                                style={{ background: '#ff5050', borderColor: '#ff5050' }}
+                            >
+                                查询
+                            </Button>
+                            <Button icon={<SyncOutlined />} onClick={handleReset}>重置</Button>
+                        </Space>
                     </Row>
                 </Form>
             </Card>
@@ -388,7 +370,6 @@ const ChannelList: FC = () => {
                 dataSource={data}
                 rowKey="id"
                 loading={loading}
-                scroll={{ x: 1800 }}
                 pagination={{
                     showSizeChanger: true,
                     showQuickJumper: true,

@@ -115,7 +115,7 @@ const SettlementList: FC = () => {
             dataIndex: 'companyName',
             key: 'companyName',
             ellipsis: true,
-            width: 200
+            width: 250
         },
         {
             title: '所在城市',
@@ -134,13 +134,6 @@ const SettlementList: FC = () => {
             dataIndex: 'applyTime',
             key: 'applyTime',
             width: 120
-        },
-        {
-            title: '入驻日期',
-            dataIndex: 'approvalDate',
-            key: 'approvalDate',
-            width: 120,
-            render: (text: string, record: SettlementApplication) => (record.auditStatus === 'signed' ? text : '-')
         },
         {
             title: '审批状态',

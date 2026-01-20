@@ -7,7 +7,6 @@ import {
     SettingOutlined,
     BarChartOutlined,
     FileTextOutlined,
-    EditOutlined,
     BookOutlined
 } from '@ant-design/icons'
 
@@ -63,12 +62,7 @@ export const menuItems: MenuItem[] = [
                 icon: <FileTextOutlined />,
                 path: '/order-reconciliation',
             },
-            {
-                key: 'adjustment-management',
-                label: '调账管理',
-                icon: <EditOutlined />,
-                path: '/adjustment-management',
-            },
+
             {
                 key: 'commission-rules',
                 label: '分佣规则管理',
