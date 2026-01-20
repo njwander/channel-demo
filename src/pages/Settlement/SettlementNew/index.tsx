@@ -6,17 +6,18 @@ import {
     Card,
     Typography,
     Space,
-    Select,
     Row,
     Col,
-    DatePicker,
     Upload,
     message,
     Modal,
     Cascader,
     Steps,
     Divider,
-    Tag
+    Tag,
+    InputNumber,
+    Select,
+    Radio
 } from 'antd'
 import {
     PlusOutlined,
@@ -24,14 +25,12 @@ import {
     SaveOutlined,
     InboxOutlined,
     CheckCircleFilled,
-    SettingOutlined
+    SettingOutlined,
+    DeleteOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import type { SettlementApplication } from '../../../types/settlement'
-import type { CommissionRule } from '../../../types/commissionRule'
-import ruleData from '../../../data/commission_rules.json'
-import NewRuleForm from './components/NewRuleForm'
 
 const { Title, Text } = Typography
 const { Option } = Select
@@ -61,6 +60,17 @@ const AREA_OPTIONS = [
     }
 ]
 
+// 标准规则
+const DEFAULT_SYSTEM_RULE = {
+    id: 'RULE_DEFAULT',
+    name: '系统默认规则',
+    tiers: [
+        { min: 0, max: 50, rate: 20 },
+        { min: 50, max: 100, rate: 25 },
+        { min: 100, max: null, rate: 30 }
+    ]
+};
+
 /**
  * 新建入驻申请页
  */
@@ -69,26 +79,17 @@ const SettlementNew: FC = () => {
     const [form] = Form.useForm()
     const [submitting, setSubmitting] = useState(false)
     const [uploadModalVisible, setUploadModalVisible] = useState(false)
-    const [rules, setRules] = useState<CommissionRule[]>([])
     const [currentStep, setCurrentStep] = useState(0)
 
     // 特殊分佣模式相关
     const [isSpecialMode, setIsSpecialMode] = useState(false)
-    const [isNewRuleModalOpen, setIsNewRuleModalOpen] = useState(false)
-    const [selectedRuleId, setSelectedRuleId] = useState<string>('RULE_DEFAULT')
 
-    // 获取规则数据
+    // 初始化表单值
     useEffect(() => {
-        const storedRules = localStorage.getItem('commission_rules')
-        const initialRules: CommissionRule[] = storedRules ? JSON.parse(storedRules) : (ruleData as CommissionRule[])
-        setRules(initialRules)
-
-        // 默认规则
-        const defaultRule = initialRules.find(r => r.isDefault) || initialRules[0]
-        if (defaultRule) {
-            setSelectedRuleId(defaultRule.id)
-            form.setFieldsValue({ ruleId: defaultRule.id })
-        }
+        form.setFieldsValue({
+            commissionType: '阶梯分佣',
+            commissionTiers: DEFAULT_SYSTEM_RULE.tiers
+        })
     }, [form])
 
     // 校验公司名称唯一性
@@ -137,7 +138,8 @@ const SettlementNew: FC = () => {
                 owner: '王五',
                 contactName: '王小二',
                 contactPhone: '13888888888',
-                contactPosition: '技术总监'
+                contactPosition: '技术总监',
+                contactEmail: 'wang@example.com'
             })
             message.success({ content: '识别成功，已自动填充相关信息', key: 'analysis' })
         }, 1500)
@@ -171,6 +173,29 @@ const SettlementNew: FC = () => {
             const values = await form.validateFields()
             setSubmitting(true)
 
+            // 校验区间合理性
+            if (isSpecialMode) {
+                const tiers = values.commissionTiers;
+                const sortedTiers = [...tiers].sort((a, b) => a.min - b.min);
+                for (let i = 0; i < sortedTiers.length; i++) {
+                    if (sortedTiers[i].max !== null && sortedTiers[i].max !== undefined && sortedTiers[i].min >= sortedTiers[i].max!) {
+                        message.error(`特殊分佣梯度 ${i + 1} 的最小值必须小于最大值`);
+                        setSubmitting(false);
+                        return;
+                    }
+                    if (i > 0 && sortedTiers[i].min !== sortedTiers[i - 1].max) {
+                        message.error(`特殊分佣梯度 ${i + 1} 的起始值必须等于上一个梯度的截止值`);
+                        setSubmitting(false);
+                        return;
+                    }
+                }
+                if (sortedTiers[0].min !== 0) {
+                    message.error('第一个梯度的起始值必须为 0');
+                    setSubmitting(false);
+                    return;
+                }
+            }
+
             const todayStr = dayjs().format('YYYYMMDD')
             const storedData = localStorage.getItem('settlement_data')
             const allRecords: SettlementApplication[] = storedData ? JSON.parse(storedData) : []
@@ -196,8 +221,10 @@ const SettlementNew: FC = () => {
                 signContractUrl: '/contracts/example.pdf',
                 businessLicenseUrl: '/licenses/example.jpg',
                 owner: '张三',
-                commissionType: '阶梯分佣',
-                ruleId: selectedRuleId,
+                commissionType: isSpecialMode ? values.commissionType : '阶梯分佣',
+                commissionRate: isSpecialMode && values.commissionType === '固定分佣' ? values.commissionRate : undefined,
+                commissionTiers: isSpecialMode ? (values.commissionType === '阶梯分佣' ? values.commissionTiers : undefined) : DEFAULT_SYSTEM_RULE.tiers,
+                ruleId: isSpecialMode ? undefined : DEFAULT_SYSTEM_RULE.id
             }
 
             localStorage.setItem('settlement_data', JSON.stringify([newApp, ...allRecords]))
@@ -222,26 +249,10 @@ const SettlementNew: FC = () => {
         })
     }
 
-    const handleRuleSelect = (value: string) => {
-        setSelectedRuleId(value)
-        form.setFieldsValue({ ruleId: value })
-    }
-
-    const handleNewRuleSuccess = (newRule: CommissionRule) => {
-        const updatedRules = [...rules, newRule]
-        setRules(updatedRules)
-        localStorage.setItem('commission_rules', JSON.stringify(updatedRules))
-        setSelectedRuleId(newRule.id)
-        form.setFieldsValue({ ruleId: newRule.id })
-        setIsNewRuleModalOpen(false)
-        message.success('新规则已配置并应用')
-    }
-
-    const currentRule = rules.find(r => r.id === selectedRuleId)
+    const currentTiers = form.getFieldValue('commissionTiers') || DEFAULT_SYSTEM_RULE.tiers;
 
     return (
         <div style={{ padding: '0 24px 24px' }}>
-            {/* 顶部工具栏 */}
             <div style={{
                 padding: '16px 0',
                 display: 'flex',
@@ -292,19 +303,14 @@ const SettlementNew: FC = () => {
                     style={{ marginBottom: 40 }}
                 />
 
-                <Form
-                    form={form}
-                    layout="vertical"
-                >
+                <Form form={form} layout="vertical">
                     {/* 第一步：基本与工商信息 */}
                     <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
-                        <Card title="基本信息" style={{ marginBottom: 24 }} extra={
-                            <Button type="link" icon={<InboxOutlined />} onClick={() => setUploadModalVisible(true)}>智能解析营业执照</Button>
-                        }>
+                        <Card title="基本信息" style={{ marginBottom: 24 }}>
                             <Row gutter={24}>
                                 <Col span={24}>
                                     <Form.Item
-                                        label="渠道公司全称"
+                                        label="渠道公司名称"
                                         required
                                         tooltip="需要与签订合同的公司名称一致"
                                     >
@@ -405,33 +411,31 @@ const SettlementNew: FC = () => {
                                     border: '1px solid #f0f0f0'
                                 }}>
                                     <CheckCircleFilled style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
-                                    <Title level={4}>影刀标准分佣规则</Title>
+                                    <Title level={4}>影刀标准分佣方案</Title>
                                     <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-                                        当前默认应用系统标准分佣规则，无需手动选择。
+                                        当前默认应用系统标准分佣阶梯，无需手动配置。
                                     </Text>
 
-                                    {currentRule && (
-                                        <div style={{
-                                            background: '#fafafa',
-                                            padding: '16px',
-                                            borderRadius: 8,
-                                            maxWidth: 500,
-                                            margin: '0 auto 32px',
-                                            textAlign: 'left'
-                                        }}>
-                                            <div style={{ marginBottom: 12 }}>
-                                                <Tag color="red">标准规则</Tag>
-                                                <Text strong>{currentRule.name}</Text>
-                                            </div>
-                                            <Space wrap size={[16, 8]}>
-                                                {currentRule.tiers.map((tier, idx) => (
-                                                    <div key={idx} style={{ fontSize: 13, color: '#666' }}>
-                                                        {tier.min}万 - {tier.max ? `${tier.max}万` : '以上'}：<Text strong style={{ color: '#ff5050' }}>{tier.rate}%</Text>
-                                                    </div>
-                                                ))}
-                                            </Space>
+                                    <div style={{
+                                        background: '#fafafa',
+                                        padding: '16px',
+                                        borderRadius: 8,
+                                        maxWidth: 500,
+                                        margin: '0 auto 32px',
+                                        textAlign: 'left'
+                                    }}>
+                                        <div style={{ marginBottom: 12 }}>
+                                            <Tag color="red">系统标准</Tag>
+                                            <Text strong>{DEFAULT_SYSTEM_RULE.name}</Text>
                                         </div>
-                                    )}
+                                        <Space wrap size={[16, 8]}>
+                                            {DEFAULT_SYSTEM_RULE.tiers.map((tier, idx) => (
+                                                <div key={idx} style={{ fontSize: 13, color: '#666' }}>
+                                                    {tier.min}万 - {tier.max ? `${tier.max}万` : '以上'}：<Text strong style={{ color: '#ff5050' }}>{tier.rate}%</Text>
+                                                </div>
+                                            ))}
+                                        </Space>
+                                    </div>
 
                                     <Divider />
                                     <Button
@@ -444,77 +448,108 @@ const SettlementNew: FC = () => {
                             ) : (
                                 <Card style={{ background: '#fff', borderRadius: 8, border: '1px solid #ff5050' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                                        <Title level={5} style={{ margin: 0 }}>特殊分佣规则配置</Title>
+                                        <Space>
+                                            <SettingOutlined style={{ color: '#ff5050' }} />
+                                            <Title level={5} style={{ margin: 0 }}>特殊分佣方案配置</Title>
+                                        </Space>
                                         <Button type="link" onClick={() => {
                                             setIsSpecialMode(false)
-                                            setSelectedRuleId('RULE_DEFAULT')
-                                            form.setFieldsValue({ ruleId: 'RULE_DEFAULT' })
+                                            form.setFieldsValue({
+                                                commissionType: '阶梯分佣',
+                                                commissionTiers: DEFAULT_SYSTEM_RULE.tiers
+                                            })
                                         }}>恢复标准规则</Button>
                                     </div>
 
-                                    <Form.Item label="选择已有规则" name="ruleId">
-                                        <div style={{ display: 'flex', gap: 12 }}>
-                                            <Select
-                                                style={{ flex: 1 }}
-                                                value={selectedRuleId}
-                                                onChange={handleRuleSelect}
-                                                placeholder="请选择规则"
-                                            >
-                                                {rules.map(rule => (
-                                                    <Option key={rule.id} value={rule.id}>
-                                                        {rule.name} {rule.isDefault && '(默认)'}
-                                                    </Option>
-                                                ))}
-                                            </Select>
-                                            <Button
-                                                type="primary"
-                                                icon={<PlusOutlined />}
-                                                onClick={() => setIsNewRuleModalOpen(true)}
-                                                style={{ background: '#ff5050', borderColor: '#ff5050' }}
-                                            >
-                                                配置新规则
-                                            </Button>
-                                        </div>
+                                    <Form.Item name="commissionType" label="分佣形式">
+                                        <Radio.Group>
+                                            <Radio value="阶梯分佣">阶梯分佣</Radio>
+                                            <Radio value="固定分佣">固定分佣</Radio>
+                                        </Radio.Group>
                                     </Form.Item>
 
-                                    {currentRule && (
-                                        <div style={{ background: '#fafafa', padding: 20, borderRadius: 8 }}>
-                                            <div style={{ marginBottom: 16 }}>
-                                                <Text strong>规则明细：{currentRule.name}</Text>
-                                                {currentRule.description && (
-                                                    <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>{currentRule.description}</div>
-                                                )}
-                                            </div>
-                                            <Row gutter={[16, 16]}>
-                                                {currentRule.tiers.map((tier, idx) => (
-                                                    <Col key={idx} span={8}>
-                                                        <div style={{
-                                                            background: '#fff',
-                                                            padding: '12px',
-                                                            borderRadius: 4,
-                                                            border: '1px solid #eee',
-                                                            textAlign: 'center'
-                                                        }}>
-                                                            <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>
-                                                                {tier.min} {tier.max ? `- ${tier.max}` : '+'} 万
-                                                            </div>
-                                                            <div style={{ fontSize: 18, fontWeight: 'bold', color: '#ff5050' }}>
-                                                                {tier.rate}%
-                                                            </div>
-                                                        </div>
-                                                    </Col>
-                                                ))}
-                                            </Row>
-                                        </div>
-                                    )}
+                                    <Form.Item noStyle shouldUpdate={(prev, curr) => prev.commissionType !== curr.commissionType}>
+                                        {({ getFieldValue }) => {
+                                            const type = getFieldValue('commissionType')
+                                            if (type === '固定分佣') {
+                                                return (
+                                                    <Form.Item name="commissionRate" label="固定分佣比例 (%)" rules={[{ required: true, message: '请输入比例' }]}>
+                                                        <InputNumber min={0} max={100} style={{ width: 200 }} suffix="%" />
+                                                    </Form.Item>
+                                                )
+                                            }
+                                            return (
+                                                <>
+                                                    <Divider dashed style={{ margin: '0 0 24px' }}>阶梯明细</Divider>
+                                                    <Form.List name="commissionTiers">
+                                                        {(fields, { add, remove }) => (
+                                                            <>
+                                                                {fields.map(({ key, name, ...restField }, index) => (
+                                                                    <Row key={key} gutter={16} align="middle" style={{ marginBottom: 12 }}>
+                                                                        <Col span={7}>
+                                                                            <Form.Item
+                                                                                {...restField}
+                                                                                name={[name, 'min']}
+                                                                                label={index === 0 ? "业绩下限 (万)" : ""}
+                                                                                rules={[{ required: true }]}
+                                                                            >
+                                                                                <InputNumber style={{ width: '100%' }} disabled={index === 0} placeholder="起点" />
+                                                                            </Form.Item>
+                                                                        </Col>
+                                                                        <Col span={1} style={{ textAlign: 'center', paddingTop: index === 0 ? 30 : 0 }}>至</Col>
+                                                                        <Col span={7}>
+                                                                            <Form.Item
+                                                                                {...restField}
+                                                                                name={[name, 'max']}
+                                                                                label={index === 0 ? "业绩上限 (万)" : ""}
+                                                                            >
+                                                                                <InputNumber style={{ width: '100%' }} placeholder="无上限" />
+                                                                            </Form.Item>
+                                                                        </Col>
+                                                                        <Col span={6}>
+                                                                            <Form.Item
+                                                                                {...restField}
+                                                                                name={[name, 'rate']}
+                                                                                label={index === 0 ? "分佣比例 (%)" : ""}
+                                                                                rules={[{ required: true }]}
+                                                                            >
+                                                                                <InputNumber style={{ width: '100%' }} min={0} max={100} />
+                                                                            </Form.Item>
+                                                                        </Col>
+                                                                        <Col span={3} style={{ paddingTop: index === 0 ? 30 : 0 }}>
+                                                                            {fields.length > 1 && (
+                                                                                <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} />
+                                                                            )}
+                                                                        </Col>
+                                                                    </Row>
+                                                                ))}
+                                                                <Form.Item>
+                                                                    <Button type="dashed" onClick={() => {
+                                                                        const tiers = form.getFieldValue('commissionTiers');
+                                                                        const lastTier = tiers[tiers.length - 1];
+                                                                        add({
+                                                                            min: lastTier?.max || 0,
+                                                                            max: lastTier?.max ? lastTier.max + 50 : null,
+                                                                            rate: (lastTier?.rate || 0) + 5
+                                                                        });
+                                                                    }} block icon={<PlusOutlined />}>
+                                                                        添加梯度
+                                                                    </Button>
+                                                                </Form.Item>
+                                                            </>
+                                                        )}
+                                                    </Form.List>
+                                                </>
+                                            )
+                                        }}
+                                    </Form.Item>
                                 </Card>
                             )}
                         </Card>
                     </div>
-                </Form >
+                </Form>
             </div>
 
-            {/* 智能解析上传弹窗 */}
             <Modal
                 title="营业执照智能识别"
                 open={uploadModalVisible}
@@ -524,32 +559,12 @@ const SettlementNew: FC = () => {
                 cancelText="取消"
             >
                 <div style={{ padding: '20px 0' }}>
-                    <Upload.Dragger
-                        maxCount={1}
-                        beforeUpload={() => false}
-                    >
-                        <p className="ant-upload-drag-icon">
-                            <InboxOutlined />
-                        </p>
+                    <Upload.Dragger maxCount={1} beforeUpload={() => false}>
+                        <p className="ant-upload-drag-icon"><InboxOutlined /></p>
                         <p className="ant-upload-text">点击或将营业执照拖拽到此区域上传</p>
                         <p className="ant-upload-hint">支持 JPG, PNG 格式，文件大小不超过 10MB</p>
                     </Upload.Dragger>
                 </div>
-            </Modal >
-
-            {/* 配置新规则弹窗 */}
-            <Modal
-                title="配置新分佣规则"
-                open={isNewRuleModalOpen}
-                footer={null}
-                onCancel={() => setIsNewRuleModalOpen(false)}
-                width={600}
-                destroyOnClose
-            >
-                <NewRuleForm
-                    onCancel={() => setIsNewRuleModalOpen(false)}
-                    onSuccess={handleNewRuleSuccess}
-                />
             </Modal>
         </div >
     )

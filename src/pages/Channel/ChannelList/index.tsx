@@ -38,9 +38,7 @@ const ChannelList: FC = () => {
     const [loading, setLoading] = useState(false)
     const [searching, setSearching] = useState(false)
     const [data, setData] = useState<Channel[]>([])
-    const [terminateModalVisible, setTerminateModalVisible] = useState(false)
-    const [currentRecord, setCurrentRecord] = useState<Channel | null>(null)
-    const [terminateForm] = Form.useForm()
+
 
     // 增强渠道数据，注入统计指标
     const getEnhancedChannels = (channels: Channel[]): Channel[] => {
@@ -149,75 +147,7 @@ const ChannelList: FC = () => {
 
 
 
-    // 处理解约
-    const handleTerminate = (record: Channel) => {
-        // 1. 清算检查
-        const reportingData = localStorage.getItem('reporting_data')
-        if (reportingData) {
-            const reportings = JSON.parse(reportingData)
-            const activeReportings = reportings.filter((r: any) =>
-                r.channelId === record.id &&
-                ['pending', 'protected'].includes(r.status)
-            )
 
-            const unPaidReportings = reportings.filter((r: any) =>
-                r.channelId === record.id &&
-                r.status === 'converted' &&
-                r.orderStatus !== 'fully_paid'
-            )
-
-            if (activeReportings.length > 0 || unPaidReportings.length > 0) {
-                Modal.error({
-                    title: '无法发起解约',
-                    content: (
-                        <div>
-                            <p>该渠道存在未完成的清算项：</p>
-                            {activeReportings.length > 0 && <p style={{ color: '#ff4d4f' }}>• 存在 {activeReportings.length} 个待审批或保护期内的报备</p>}
-                            {unPaidReportings.length > 0 && <p style={{ color: '#ff4d4f' }}>• 存在 {unPaidReportings.length} 个未完全回款的报备</p>}
-                            <p>请先处理相关报备后再试。</p>
-                        </div>
-                    )
-                })
-                return
-            }
-        }
-
-        setCurrentRecord(record)
-        setTerminateModalVisible(true)
-    }
-
-    // 提交解约
-    const submitTerminate = async () => {
-        try {
-            const values = await terminateForm.validateFields()
-            if (!currentRecord) return
-
-            const storedData = localStorage.getItem('channel_data')
-            if (storedData) {
-                const channels: Channel[] = JSON.parse(storedData)
-                const updatedChannels = channels.map(c => {
-                    if (c.id === currentRecord.id) {
-                        return {
-                            ...c,
-                            status: 'terminated' as ChannelStatus,
-                            terminationReason: values.reason,
-                            terminationDescription: values.description,
-                            terminationDate: dayjs().format('YYYY-MM-DD'),
-                            terminationVoucher: values.voucher?.[0]?.name || 'dummy_voucher.png'
-                        }
-                    }
-                    return c
-                })
-                localStorage.setItem('channel_data', JSON.stringify(updatedChannels))
-                message.success('解约已生效')
-                setTerminateModalVisible(false)
-                terminateForm.resetFields()
-                fetchData()
-            }
-        } catch (error) {
-            console.error('Validation Failed:', error)
-        }
-    }
 
     // 状态映射
     const statusMap: Record<ChannelStatus, { text: string; color: string }> = {
@@ -305,16 +235,7 @@ const ChannelList: FC = () => {
                         详情
                     </Button>
 
-                    {record.status !== 'terminated' && (
-                        <Button
-                            type="link"
-                            size="small"
-                            onClick={() => handleTerminate(record)}
-                            danger
-                        >
-                            解约
-                        </Button>
-                    )}
+
                 </Space>
             )
         }
@@ -377,63 +298,7 @@ const ChannelList: FC = () => {
                 }}
             />
 
-            <Modal
-                title="发起渠道解约"
-                open={terminateModalVisible}
-                onOk={submitTerminate}
-                onCancel={() => {
-                    setTerminateModalVisible(false)
-                    terminateForm.resetFields()
-                }}
-                okText="确认解约"
-                cancelText="取消"
-                okButtonProps={{ danger: true }}
-                destroyOnClose
-            >
-                <div style={{ marginBottom: 16 }}>
-                    正在为 <span style={{ fontWeight: 'bold' }}>{currentRecord?.companyName}</span> 发起解约流程。
-                </div>
-                <Form form={terminateForm} layout="vertical">
-                    <Form.Item
-                        name="reason"
-                        label="解约原因"
-                        rules={[{ required: true, message: '请选择解约原因' }]}
-                    >
-                        <Select placeholder="请选择解约原因">
-                            <Option value="contract_expired">合作到期</Option>
-                            <Option value="performance_issue">业绩不达标</Option>
-                            <Option value="channel_quit">渠道主动退出</Option>
-                            <Option value="violation">违规处理</Option>
-                            <Option value="other">其他</Option>
-                        </Select>
-                    </Form.Item>
-                    <Form.Item
-                        name="description"
-                        label="解约说明"
-                        rules={[{ required: true, message: '请输入解约说明' }]}
-                    >
-                        <Input.TextArea rows={4} placeholder="请详细说明解约原因" />
-                    </Form.Item>
-                    <Form.Item
-                        name="voucher"
-                        label="解约协议/沟通确认截图"
-                        valuePropName="fileList"
-                        getValueFromEvent={(e: any) => {
-                            if (Array.isArray(e)) return e
-                            return e?.fileList
-                        }}
-                        rules={[{ required: true, message: '请上传解约协议或截图' }]}
-                    >
-                        <Upload
-                            beforeUpload={() => false}
-                            maxCount={1}
-                            listType="picture"
-                        >
-                            <Button icon={<UploadOutlined />}>点击上传</Button>
-                        </Upload>
-                    </Form.Item>
-                </Form>
-            </Modal>
+
         </div>
     )
 }

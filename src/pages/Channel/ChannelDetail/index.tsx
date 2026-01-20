@@ -18,7 +18,8 @@ import {
     message,
     Dropdown,
     Empty,
-    Divider
+    Divider,
+    Upload
 } from 'antd'
 import {
     ArrowLeftOutlined,
@@ -30,15 +31,16 @@ import {
     DownloadOutlined,
     FilePdfOutlined,
     FileWordOutlined,
-    PlusOutlined
+    PlusOutlined,
+    UploadOutlined
 } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import type { Channel, ChannelStatus, CommissionType } from '../../../types/channel'
-import type { CommissionRule } from '../../../types/commissionRule'
 import type { Reporting } from '../../../types/reporting'
 
 const { Title, Text } = Typography
+const { Option } = Select
 
 /**
  * 渠道详情页
@@ -48,12 +50,15 @@ const ChannelDetail: FC = () => {
     const navigate = useNavigate()
     const [data, setData] = useState<Channel | null>(null)
     const [loading, setLoading] = useState(true)
-    const [commissionRules, setCommissionRules] = useState<CommissionRule[]>([])
     const [reportings, setReportings] = useState<Reporting[]>([])
 
     // 弹窗状态
     const [isCommissionModalVisible, setIsCommissionModalVisible] = useState(false)
     const [commissionForm] = Form.useForm()
+
+    // 解约相关状态
+    const [terminateModalVisible, setTerminateModalVisible] = useState(false)
+    const [terminateForm] = Form.useForm()
 
     // 获取数据
     const fetchData = () => {
@@ -64,11 +69,6 @@ const ChannelDetail: FC = () => {
             const channels: Channel[] = JSON.parse(storedChannels)
             currentChannel = channels.find(c => c.id === id) || null
             setData(currentChannel)
-        }
-
-        const storedRules = localStorage.getItem('commission_rules')
-        if (storedRules) {
-            setCommissionRules(JSON.parse(storedRules))
         }
 
         const storedReportings = localStorage.getItem('reporting_data')
@@ -117,6 +117,78 @@ const ChannelDetail: FC = () => {
         }
     }
 
+    // 处理解约
+    const handleTerminate = () => {
+        if (!data) return
+
+        // 1. 清算检查
+        const reportingData = localStorage.getItem('reporting_data')
+        if (reportingData) {
+            const reportings = JSON.parse(reportingData)
+            const activeReportings = reportings.filter((r: any) =>
+                r.channelId === data.id &&
+                ['pending', 'protected'].includes(r.status)
+            )
+
+            const unPaidReportings = reportings.filter((r: any) =>
+                r.channelId === data.id &&
+                r.status === 'converted' &&
+                r.orderStatus !== 'fully_paid'
+            )
+
+            if (activeReportings.length > 0 || unPaidReportings.length > 0) {
+                Modal.error({
+                    title: '无法发起解约',
+                    content: (
+                        <div>
+                            <p>该渠道存在未完成的清算项：</p>
+                            {activeReportings.length > 0 && <p style={{ color: '#ff4d4f' }}>• 存在 {activeReportings.length} 个待审批或保护期内的报备</p>}
+                            {unPaidReportings.length > 0 && <p style={{ color: '#ff4d4f' }}>• 存在 {unPaidReportings.length} 个未完全回款的报备</p>}
+                            <p>请先处理相关报备后再试。</p>
+                        </div>
+                    )
+                })
+                return
+            }
+        }
+
+        setTerminateModalVisible(true)
+    }
+
+    // 提交解约
+    const submitTerminate = async () => {
+        try {
+            const values = await terminateForm.validateFields()
+            if (!data) return
+
+            const storedData = localStorage.getItem('channel_data')
+            if (storedData) {
+                const channels: Channel[] = JSON.parse(storedData)
+                const updatedChannels = channels.map(c => {
+                    if (c.id === data.id) {
+                        return {
+                            ...c,
+                            status: 'terminated' as ChannelStatus,
+                            terminationReason: values.reason,
+                            terminationDescription: values.description,
+                            terminationDate: dayjs().format('YYYY-MM-DD'),
+                            terminationVoucher: values.voucher?.[0]?.name || 'dummy_voucher.png'
+                        }
+                    }
+                    return c
+                })
+                localStorage.setItem('channel_data', JSON.stringify(updatedChannels))
+                message.success('解约已生效')
+                setTerminateModalVisible(false)
+                terminateForm.resetFields()
+                fetchData()
+            }
+        } catch (error) {
+            console.error('Validation Failed:', error)
+        }
+    }
+
+
     if (!data && !loading) return <div style={{ padding: 24 }}><Empty description="未找到渠道资料" /></div>
 
     return (
@@ -143,9 +215,8 @@ const ChannelDetail: FC = () => {
                             items: [
                                 { key: '1', label: '变更负责人', icon: <UserOutlined /> },
                                 { key: '2', label: '分佣配置变更', icon: <SafetyCertificateOutlined />, onClick: () => setIsCommissionModalVisible(true) },
-                                { key: '3', label: '导出明细', icon: <DownloadOutlined /> },
                                 { type: 'divider' },
-                                { key: '4', label: '解约', icon: <HistoryOutlined />, danger: true },
+                                { key: '4', label: '解约', icon: <HistoryOutlined />, danger: true, onClick: handleTerminate, disabled: data?.status === 'terminated' },
                             ]
                         }}
                     >
@@ -198,8 +269,16 @@ const ChannelDetail: FC = () => {
                                             <Descriptions column={2}>
                                                 <Descriptions.Item label="分佣类型">{data ? commissionTypeMap[data.commissionType] : '-'}</Descriptions.Item>
                                                 <Descriptions.Item label="当前配置">
-                                                    {data?.commissionType === 'fixed' ? `${data.commissionRate || 10}%` :
-                                                        data?.commissionType === 'custom_ladder' ? (data.ruleId || '通用阶梯规则') : '按协议约定'}
+                                                    {data?.commissionTiers ? (
+                                                        <Space direction="vertical" style={{ width: '100%' }} size={2}>
+                                                            {data.commissionTiers.map((tier: any, idx: number) => (
+                                                                <div key={idx} style={{ fontSize: 12 }}>
+                                                                    {tier.min}万-{tier.max ? `${tier.max}万` : '以上'}：<Text strong style={{ color: '#ff5050' }}>{tier.rate}%</Text>
+                                                                </div>
+                                                            ))}
+                                                        </Space>
+                                                    ) : data?.commissionType === 'fixed' ? `${data.commissionRate || 10}%` :
+                                                        data?.commissionType === 'custom_ladder' ? '系统标准阶梯' : '按协议约定'}
                                                 </Descriptions.Item>
                                                 <Descriptions.Item label="合作有效期">{`${data?.startDate} 至 ${data?.endDate}`}</Descriptions.Item>
                                             </Descriptions>
@@ -360,9 +439,9 @@ const ChannelDetail: FC = () => {
                             }
                             if (newType === 'custom_ladder') {
                                 return (
-                                    <Form.Item name="ruleId" label="拟选择分佣规则" rules={[{ required: true }]}>
-                                        <Select options={commissionRules.map(r => ({ label: r.name, value: r.id }))} />
-                                    </Form.Item>
+                                    <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4, marginBottom: 24 }}>
+                                        <Text type="secondary">将应用系统标准阶梯分佣比例。</Text>
+                                    </div>
                                 )
                             }
                             if (newType === 'personalized') {
@@ -380,8 +459,68 @@ const ChannelDetail: FC = () => {
                     </Form.Item>
                 </Form>
             </Modal>
+
+            {/* 渠道解约弹窗 */}
+            <Modal
+                title="发起渠道解约"
+                open={terminateModalVisible}
+                onOk={submitTerminate}
+                onCancel={() => {
+                    setTerminateModalVisible(false)
+                    terminateForm.resetFields()
+                }}
+                okText="确认解约"
+                cancelText="取消"
+                okButtonProps={{ danger: true }}
+                destroyOnClose
+            >
+                <div style={{ marginBottom: 16 }}>
+                    正在为 <span style={{ fontWeight: 'bold' }}>{data?.companyName}</span> 发起解约流程。
+                </div>
+                <Form form={terminateForm} layout="vertical">
+                    <Form.Item
+                        name="reason"
+                        label="解约原因"
+                        rules={[{ required: true, message: '请选择解约原因' }]}
+                    >
+                        <Select placeholder="请选择解约原因">
+                            <Option value="contract_expired">合作到期</Option>
+                            <Option value="performance_issue">业绩不达标</Option>
+                            <Option value="channel_quit">渠道主动退出</Option>
+                            <Option value="violation">违规处理</Option>
+                            <Option value="other">其他</Option>
+                        </Select>
+                    </Form.Item>
+                    <Form.Item
+                        name="description"
+                        label="解约说明"
+                        rules={[{ required: true, message: '请输入解约说明' }]}
+                    >
+                        <Input.TextArea rows={4} placeholder="请详细说明解约原因" />
+                    </Form.Item>
+                    <Form.Item
+                        name="voucher"
+                        label="解约协议/沟通确认截图"
+                        valuePropName="fileList"
+                        getValueFromEvent={(e: any) => {
+                            if (Array.isArray(e)) return e
+                            return e?.fileList
+                        }}
+                        rules={[{ required: true, message: '请上传解约协议或截图' }]}
+                    >
+                        <Upload
+                            beforeUpload={() => false}
+                            maxCount={1}
+                            listType="picture"
+                        >
+                            <Button icon={<UploadOutlined />}>点击上传</Button>
+                        </Upload>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     )
 }
+
 
 export default ChannelDetail

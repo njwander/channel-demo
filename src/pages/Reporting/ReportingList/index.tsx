@@ -249,7 +249,7 @@ const ReportingList: FC = () => {
                 <a onClick={() => navigate(`/reporting-detail/${record.id}`)}>{text}</a>
             ),
             ellipsis: true,
-            minWidth: 200
+            width: 200
         },
         {
             title: '报备状态',
@@ -261,70 +261,24 @@ const ReportingList: FC = () => {
             )
         },
         {
-            title: '保护到期',
-            dataIndex: 'expiryDate',
-            key: 'expiryDate',
-            width: 110,
-            render: (date: string, record: Reporting) => {
-                if (!date) return '-'
-                const diff = dayjs(date).diff(dayjs(), 'day')
-                const isUrgent = diff <= 7 && diff >= 0
-                return (
-                    <span style={{ color: isUrgent ? '#ff4d4f' : 'inherit', fontWeight: isUrgent ? 'bold' : 'normal' }}>
-                        {date}
-                    </span>
-                )
-            }
-        },
-        {
-            title: '跟进状态',
-            dataIndex: 'followupStatus',
-            key: 'followupStatus',
-            width: 100,
-            render: (status: FollowupStatus) => followupMap[status] || '-'
-        },
-        {
-            title: '商机阶段',
-            dataIndex: 'opportunityStage',
-            key: 'opportunityStage',
-            width: 100,
-            render: (stage: OpportunityStage) => stageMap[stage] || '-'
-        },
-        {
-            title: '成交状态',
-            dataIndex: 'orderStatus',
-            key: 'orderStatus',
-            width: 120,
-            render: (status: OrderStatus) => status ? orderMap[status] : '-'
-        },
-        {
             title: '所属渠道',
             dataIndex: 'channelName',
             key: 'channelName',
             ellipsis: true,
-            width: 180
+            width: 200
         },
         {
-            title: '负责人',
+            title: '报备负责人',
             dataIndex: 'channelOwner',
             key: 'channelOwner',
-            width: 100
+            width: 80
         },
         {
-            title: '是否有效',
-            dataIndex: 'isValid',
-            key: 'isValid',
-            width: 100,
-            render: (valid: boolean) => (
-                valid === undefined ? '-' : (valid ? <Tag color="success">有效</Tag> : <Tag color="error">无效</Tag>)
-            )
-        },
-        {
-            title: '报备时间',
+            title: '报备日期',
             dataIndex: 'reportingTime',
             key: 'reportingTime',
-            width: 160,
-            render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm')
+            width: 100,
+            render: (time: string) => dayjs(time).format('YYYY-MM-DD')
         },
         {
             title: '操作',
@@ -383,7 +337,7 @@ const ReportingList: FC = () => {
     return (
         <div style={{ padding: 24 }}>
             <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Title level={4} style={{ margin: 0 }}>客户报备管理</Title>
+                <Title level={4} style={{ margin: 0 }}>客户报备</Title>
                 <Space>
                     <Button
                         type="primary"
@@ -418,63 +372,22 @@ const ReportingList: FC = () => {
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={12} md={8} lg={6}>
-                            <Form.Item name="followupStatus" label="跟进状态">
-                                <Select placeholder="请选择状态" allowClear>
-                                    <Option value="all">全部</Option>
-                                    <Option value="not_started">未跟进</Option>
-                                    <Option value="following">跟进中</Option>
-                                    <Option value="customer_associated">关联客户</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} md={8} lg={6}>
-                            <Form.Item name="opportunityStage" label="商机阶段">
-                                <Select placeholder="请选择阶段" allowClear>
-                                    <Option value="all">全部</Option>
-                                    <Option value="none">无商机</Option>
-                                    <Option value="developing">商机中</Option>
-                                    <Option value="closed">已成单</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} md={8} lg={6}>
-                            <Form.Item name="orderStatus" label="成交状态">
-                                <Select placeholder="请选择状态" allowClear>
-                                    <Option value="all">全部</Option>
-                                    <Option value="signed">已签约</Option>
-                                    <Option value="partially_paid">已回款(部分)</Option>
-                                    <Option value="fully_paid">已回款(全部)</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} md={8} lg={6}>
-                            <Form.Item name="isValid" label="是否有效">
-                                <Select placeholder="请选择" allowClear>
-                                    <Option value="all">全部</Option>
-                                    <Option value="true">有效</Option>
-                                    <Option value="false">无效</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col xs={24} sm={12} md={8} lg={6}>
                             <Form.Item name="reportingTimeRange" label="报备时间">
                                 <RangePicker style={{ width: '100%' }} />
                             </Form.Item>
                         </Col>
-                        <Col xs={24} sm={24} md={24} lg={12} style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', marginBottom: 24 }}>
-                            <Space>
-                                <Button
-                                    type="primary"
-                                    icon={<SearchOutlined />}
-                                    htmlType="submit"
-                                    loading={searching}
-                                    style={{ background: '#ff5050', borderColor: '#ff5050' }}
-                                >
-                                    查询
-                                </Button>
-                                <Button icon={<SyncOutlined />} onClick={handleReset}>重置</Button>
-                            </Space>
-                        </Col>
+                        <Space>
+                            <Button
+                                type="primary"
+                                icon={<SearchOutlined />}
+                                htmlType="submit"
+                                loading={searching}
+                                style={{ background: '#ff5050', borderColor: '#ff5050' }}
+                            >
+                                查询
+                            </Button>
+                            <Button icon={<SyncOutlined />} onClick={handleReset}>重置</Button>
+                        </Space>
                     </Row>
                 </Form>
             </Card>

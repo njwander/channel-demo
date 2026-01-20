@@ -378,15 +378,31 @@ const SettlementDetail: FC = () => {
                             {data.commissionDescription && (
                                 <Descriptions.Item label="特殊说明">{data.commissionDescription}</Descriptions.Item>
                             )}
-                            {data.ruleId && (
-                                <Descriptions.Item label="阶梯规则 ID">{data.ruleId}</Descriptions.Item>
-                            )}
+                            {data.commissionTiers ? (
+                                <div style={{ marginTop: 12 }}>
+                                    <div style={{ marginBottom: 8, fontSize: 13, color: '#999' }}>分佣阶梯明细：</div>
+                                    <Space direction="vertical" style={{ width: '100%' }} size={4}>
+                                        {data.commissionTiers.map((tier, idx) => (
+                                            <div key={idx} style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                padding: '4px 8px',
+                                                background: '#f9f9f9',
+                                                borderRadius: 2
+                                            }}>
+                                                <span>{tier.min}万 - {tier.max ? `${tier.max}万` : '以上'}</span>
+                                                <Text strong style={{ color: '#ff5050' }}>{tier.rate}%</Text>
+                                            </div>
+                                        ))}
+                                    </Space>
+                                    {!data.ruleId && (
+                                        <div style={{ marginTop: 8 }}>
+                                            <Tag color="orange">特殊申请</Tag>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null}
                         </Descriptions>
-                        {data.ruleId && (
-                            <div style={{ marginTop: 8, padding: 8, background: '#fafafa', fontSize: 12 }}>
-                                提示：详情查阅对应的分佣规则库
-                            </div>
-                        )}
                     </Card>
 
                     {/* 合同管理 */}

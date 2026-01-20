@@ -13,8 +13,6 @@ import MonthlySettlement from '../pages/Performance/MonthlySettlement'
 
 import OrderReconciliation from '../pages/Performance/OrderReconciliation'
 import Termination from '../pages/Termination/Termination'
-import CommissionRuleList from '../pages/Performance/CommissionRuleList'
-import CommissionRuleConfig from '../pages/Performance/CommissionRuleConfig'
 import BusinessRules from '../pages/BusinessRules'
 import NotFound from '../pages/NotFound'
 import { useEffect } from 'react'
@@ -51,8 +49,6 @@ const AppRoutes = () => {
                 <Route path="monthly-settlement" element={<MonthlySettlement />} />
 
                 <Route path="order-reconciliation" element={<OrderReconciliation />} />
-                <Route path="performance/commission-rules" element={<CommissionRuleList />} />
-                <Route path="performance/commission-rules/config/:id" element={<CommissionRuleConfig />} />
 
                 {/* 渠道解约 */}
                 <Route path="termination" element={<Termination />} />

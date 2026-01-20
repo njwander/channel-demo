@@ -20,6 +20,7 @@ export interface Channel {
     commissionType: CommissionType // 分佣类型
     commissionRate?: string // 分佣比例 (如 "12%", "协议分佣")
     ruleId?: string         // 分佣规则ID (阶梯分佣)
+    commissionTiers?: any[] // 具体的分佣阶梯配置
     initialPerformance?: number // 初始化业绩 (万元)
     startDate: string       // 合作开始日 (YYYY-MM-DD)
     endDate: string         // 合作周期截止日期

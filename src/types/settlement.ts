@@ -1,22 +1,10 @@
 /**
- * 入驻审批状态
- * pending: 待审批
- * rejected: 已驳回
- * approved: 待签约 (审批通过)
- * signed: 已归档 (完成签署)
+ * 阶梯梯度定义
  */
-export type SettlementStatus = 'pending' | 'rejected' | 'approved' | 'signed'
-
-/**
- * 客户入驻质量检查结果
- */
-export interface QualityCheckItem {
-    id: string
-    customerName: string
-    legalPerson: string
-    gsCheckResult: 'pass' | 'name_mismatch' | 'query_failed'
-    crmExists: boolean
-    crmId?: string
+export interface LadderTier {
+    min: number      // 区间最小值 (万元)
+    max: number | null // 区间最大值 (万元)，null 表示无上限
+    rate: number     // 对应比例 (%)
 }
 
 /**
@@ -47,6 +35,7 @@ export interface SettlementApplication {
     applyTime: string            // 申请日期 (YYYY-MM-DD)
     approvalDate?: string        // 审批通过日期 (YYYY-MM-DD)
     ruleId?: string              // 分佣规则ID
+    commissionTiers?: any[]      // 具体的分佣阶梯配置
     qualityCheckResults?: QualityCheckItem[] // 客户资源质检结果
     contractType?: 'standard' | 'non-standard' // 合同类型
     customContractUrl?: string    // 用户的非标合同文件路径
