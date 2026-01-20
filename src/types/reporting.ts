@@ -57,4 +57,6 @@ export interface Reporting {
     expectedDate?: string   // 预计成交日期
     opportunityDesc?: string // 商机描述
     progressImages?: string[] // 对接推进截图
+    isValid?: boolean         // 是否是有效报备
+    invalidReason?: string    // 判定无效的原因
 }

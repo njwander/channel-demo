@@ -114,17 +114,35 @@ const ReportingDetail: FC = () => {
 
             <Row gutter={24}>
                 <Col span={18}>
-                    {/* 基础信息 */}
-                    <Card title="基础信息" style={{ marginBottom: 24 }}>
+                    {/* 报备执行信息 */}
+                    <Card title="报备信息" style={{ marginBottom: 24 }}>
                         <Descriptions column={RESPONSIVE_DESCRIPTIONS_COLUMN}>
                             <Descriptions.Item label="报备编号">{data.id}</Descriptions.Item>
-                            <Descriptions.Item label="客户名称">{data.customerName}</Descriptions.Item>
-                            <Descriptions.Item label="纳税人识别号">{data.taxId}</Descriptions.Item>
+                            <Descriptions.Item label="负责人">{data.channelOwner}</Descriptions.Item>
                             <Descriptions.Item label="报备时间">{dayjs(data.reportingTime).format('YYYY-MM-DD HH:mm:ss')}</Descriptions.Item>
+                            <Descriptions.Item label="报备状态">
+                                <Tag color={statusMap[data.status].color}>{statusMap[data.status].text}</Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="保护到期日">{data.expiryDate || '--'}</Descriptions.Item>
+                            <Descriptions.Item label="是否有效报备">
+                                {data.isValid === undefined ? '--' : (data.isValid ? <Tag color="success">有效</Tag> : <Tag color="error">无效</Tag>)}
+                            </Descriptions.Item>
+                            {data.isValid === false && (
+                                <Descriptions.Item label="判定无效原因" span={2}>
+                                    <Text type="danger">{data.invalidReason || '未填写原因'}</Text>
+                                </Descriptions.Item>
+                            )}
+                        </Descriptions>
+                    </Card>
+
+                    {/* 客户基本信息 */}
+                    <Card title="客户基本信息" style={{ marginBottom: 24 }}>
+                        <Descriptions column={RESPONSIVE_DESCRIPTIONS_COLUMN}>
+                            <Descriptions.Item label="客户名称">{data.customerName}</Descriptions.Item>
+                            <Descriptions.Item label="纳税人识别号">{data.taxId || '--'}</Descriptions.Item>
                             <Descriptions.Item label="所属地区">{`${data.province} / ${data.city}`}</Descriptions.Item>
                             <Descriptions.Item label="行业">{data.industry}</Descriptions.Item>
                             <Descriptions.Item label="企业规模">{data.enterpriseScale}</Descriptions.Item>
-                            <Descriptions.Item label="保护到期日">{data.expiryDate || '--'}</Descriptions.Item>
                         </Descriptions>
                     </Card>
 
@@ -183,15 +201,11 @@ const ReportingDetail: FC = () => {
 
                 <Col span={6}>
                     {/* 渠道信息卡片 */}
-                    <Card title="渠道信息" style={{ marginBottom: 24 }}>
+                    <Card title="渠道来源" style={{ marginBottom: 24 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <div>
-                                <Text type="secondary">所属渠道：</Text>
+                                <Text type="secondary">报备渠道：</Text>
                                 <div><Text strong>{data.channelName}</Text></div>
-                            </div>
-                            <div>
-                                <Text type="secondary">渠道负责人：</Text>
-                                <div><Text strong>{data.channelOwner}</Text></div>
                             </div>
                         </div>
                     </Card>

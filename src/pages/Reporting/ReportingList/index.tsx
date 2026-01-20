@@ -50,6 +50,28 @@ const ReportingList: FC = () => {
     const [loading, setLoading] = useState(false)
     const [searching, setSearching] = useState(false)
     const [data, setData] = useState<Reporting[]>([])
+    const [isTransferModalVisible, setIsTransferModalVisible] = useState(false)
+    const [isInvalidModalVisible, setIsInvalidModalVisible] = useState(false)
+    const [currentRecord, setCurrentRecord] = useState<Reporting | null>(null)
+    const [transferForm] = Form.useForm()
+    const [invalidForm] = Form.useForm()
+
+    // 判定无效的原因选项
+    const invalidReasonOptions = [
+        { label: '客户冲突 (CRM已存在/销售跟进中)', value: '客户冲突' },
+        { label: '无效客户信息 (名称不符/联系方式有误)', value: '无效客户信息' },
+        { label: '非渠道授权范围 (行业/区域限制)', value: '非渠道授权范围' },
+        { label: '重复报备', value: '重复报备' },
+        { label: '其他', value: '其他' }
+    ]
+
+    // 模拟内部员工列表
+    const internalStaff = [
+        { label: '张三 (渠道负责人)', value: '张三' },
+        { label: '李四 (销售经理)', value: '李四' },
+        { label: '王五 (销售)', value: '王五' },
+        { label: '赵六 (渠道经理)', value: '赵六' }
+    ]
 
     // 获取数据
     const fetchData = () => {
@@ -104,6 +126,12 @@ const ReportingList: FC = () => {
                         filteredData = filteredData.filter(item => item.orderStatus === values.orderStatus)
                     }
 
+                    // 是否有效过滤
+                    if (values.isValid !== undefined && values.isValid !== 'all') {
+                        const isValid = values.isValid === 'true'
+                        filteredData = filteredData.filter(item => item.isValid === isValid)
+                    }
+
                     // 报备时间过滤
                     if (values.reportingTimeRange) {
                         const [start, end] = values.reportingTimeRange
@@ -126,6 +154,59 @@ const ReportingList: FC = () => {
     const handleReset = () => {
         form.resetFields()
         fetchData()
+    }
+
+    // 处理转交提交
+    const handleTransferOk = async () => {
+        try {
+            const values = await transferForm.validateFields()
+            if (!currentRecord) return
+
+            // 模拟更新数据
+            const newData = data.map(item => {
+                if (item.id === currentRecord.id) {
+                    return { ...item, channelOwner: values.newReviewer }
+                }
+                return item
+            })
+
+            setData(newData)
+            localStorage.setItem('reporting_data', JSON.stringify(newData))
+            message.success(`已成功转交至 ${values.newReviewer}`)
+            setIsTransferModalVisible(false)
+            transferForm.resetFields()
+        } catch (error) {
+            console.error('Transfer Failed:', error)
+        }
+    }
+
+    // 处理判定无效提交
+    const handleInvalidOk = async () => {
+        try {
+            const values = await invalidForm.validateFields()
+            if (!currentRecord) return
+
+            // 模拟更新数据
+            const newData = data.map(item => {
+                if (item.id === currentRecord.id) {
+                    return {
+                        ...item,
+                        status: 'rejected' as const,
+                        isValid: false,
+                        invalidReason: values.invalidReason
+                    }
+                }
+                return item
+            })
+
+            setData(newData)
+            localStorage.setItem('reporting_data', JSON.stringify(newData))
+            message.success('已判定为无效报备')
+            setIsInvalidModalVisible(false)
+            invalidForm.resetFields()
+        } catch (error) {
+            console.error('Invalid Selection Failed:', error)
+        }
     }
 
     // 报备状态映射
@@ -230,6 +311,15 @@ const ReportingList: FC = () => {
             width: 100
         },
         {
+            title: '是否有效',
+            dataIndex: 'isValid',
+            key: 'isValid',
+            width: 100,
+            render: (valid: boolean) => (
+                valid === undefined ? '-' : (valid ? <Tag color="success">有效</Tag> : <Tag color="error">无效</Tag>)
+            )
+        },
+        {
             title: '报备时间',
             dataIndex: 'reportingTime',
             key: 'reportingTime',
@@ -239,50 +329,51 @@ const ReportingList: FC = () => {
         {
             title: '操作',
             key: 'action',
-            width: 150,
+            width: 250,
             fixed: 'right' as const,
             render: (_: any, record: Reporting) => (
-                <Space size="small">
-                    <Tooltip title="查看详情">
-                        <Button
-                            type="text"
-                            icon={<EyeOutlined />}
-                            onClick={() => navigate(`/reporting-detail/${record.id}`)}
-                        />
-                    </Tooltip>
+                <Space size="middle">
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => navigate(`/reporting-detail/${record.id}`)}
+                    >
+                        详情
+                    </Button>
                     {record.status === 'rejected' && (
-                        <Tooltip title="重新提交">
-                            <Button
-                                type="text"
-                                icon={<EditOutlined />}
-                                onClick={() => navigate('/reporting-new')}
-                            />
-                        </Tooltip>
+                        <Button
+                            type="link"
+                            size="small"
+                            onClick={() => navigate('/reporting-new')}
+                        >
+                            编辑
+                        </Button>
                     )}
-                    {record.status === 'protected' && (
-                        <Tooltip title="延期申请">
+                    {record.status === 'pending' && (
+                        <>
                             <Button
-                                type="text"
-                                icon={<CalendarOutlined />}
-                                onClick={() => message.info('发起延期申请审批...')}
-                            />
-                        </Tooltip>
-                    )}
-                    {(record.status === 'pending' || record.status === 'rejected') && (
-                        <Tooltip title="作废">
+                                type="link"
+                                size="small"
+                                onClick={() => {
+                                    setCurrentRecord(record)
+                                    transferForm.setFieldsValue({ newReviewer: record.channelOwner })
+                                    setIsTransferModalVisible(true)
+                                }}
+                            >
+                                转交
+                            </Button>
                             <Button
-                                type="text"
-                                icon={<DeleteOutlined />}
+                                type="link"
+                                size="small"
                                 danger
                                 onClick={() => {
-                                    Modal.confirm({
-                                        title: '确定作废该报备？',
-                                        content: '作废后将释放该客户资源，无法撤回。',
-                                        onOk: () => message.success('报备已作废')
-                                    })
+                                    setCurrentRecord(record)
+                                    setIsInvalidModalVisible(true)
                                 }}
-                            />
-                        </Tooltip>
+                            >
+                                判定无效
+                            </Button>
+                        </>
                     )}
                 </Space>
             )
@@ -357,6 +448,15 @@ const ReportingList: FC = () => {
                             </Form.Item>
                         </Col>
                         <Col xs={24} sm={12} md={8} lg={6}>
+                            <Form.Item name="isValid" label="是否有效">
+                                <Select placeholder="请选择" allowClear>
+                                    <Option value="all">全部</Option>
+                                    <Option value="true">有效</Option>
+                                    <Option value="false">无效</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} md={8} lg={6}>
                             <Form.Item name="reportingTimeRange" label="报备时间">
                                 <RangePicker style={{ width: '100%' }} />
                             </Form.Item>
@@ -391,6 +491,82 @@ const ReportingList: FC = () => {
                     showTotal: (total) => `共 ${total} 条`
                 }}
             />
+
+            {/* 转交任务弹窗 */}
+            <Modal
+                title="转交报备审查任务"
+                open={isTransferModalVisible}
+                onOk={handleTransferOk}
+                onCancel={() => {
+                    setIsTransferModalVisible(false)
+                    transferForm.resetFields()
+                }}
+                destroyOnClose
+            >
+                <div style={{ marginBottom: 16 }}>
+                    <Typography.Text type="secondary">客户名称：</Typography.Text>
+                    <Typography.Text strong>{currentRecord?.customerName}</Typography.Text>
+                </div>
+                <Form form={transferForm} layout="vertical">
+                    <Form.Item
+                        name="newReviewer"
+                        label="选择新负责人"
+                        rules={[{ required: true, message: '请选择新负责人' }]}
+                    >
+                        <Select placeholder="请选择内部员工" options={internalStaff} showSearch />
+                    </Form.Item>
+                </Form>
+            </Modal>
+
+            {/* 判定无效弹窗 */}
+            <Modal
+                title="判定报备无效"
+                open={isInvalidModalVisible}
+                onOk={handleInvalidOk}
+                onCancel={() => {
+                    setIsInvalidModalVisible(false)
+                    invalidForm.resetFields()
+                }}
+                okText="确认无效"
+                cancelText="取消"
+                destroyOnClose
+            >
+                <div style={{ marginBottom: 16 }}>
+                    <Typography.Text type="secondary">客户名称：</Typography.Text>
+                    <Typography.Text strong>{currentRecord?.customerName}</Typography.Text>
+                </div>
+                <Form form={invalidForm} layout="vertical">
+                    <Form.Item
+                        name="invalidReason"
+                        label="无效原因"
+                        rules={[{ required: true, message: '请选择无效原因' }]}
+                    >
+                        <Select placeholder="请选择无效原因" options={invalidReasonOptions} />
+                    </Form.Item>
+                    <Form.Item
+                        noStyle
+                        shouldUpdate={(prevValues, currentValues) => prevValues.invalidReason !== currentValues.invalidReason}
+                    >
+                        {({ getFieldValue }) =>
+                            getFieldValue('invalidReason') === '其他' ? (
+                                <Form.Item
+                                    name="otherReason"
+                                    label="其他原因备注"
+                                    rules={[{ required: true, message: '请输入详情' }]}
+                                    style={{ marginTop: 16 }}
+                                >
+                                    <Input.TextArea placeholder="请输入具体原因说明" rows={3} />
+                                </Form.Item>
+                            ) : null
+                        }
+                    </Form.Item>
+                    <div style={{ marginTop: 8 }}>
+                        <Typography.Text type="warning" italic style={{ fontSize: '12px' }}>
+                            * 判定为无效报备后，该客户成交将无法获得渠道返点。
+                        </Typography.Text>
+                    </div>
+                </Form>
+            </Modal>
         </div>
     )
 }
