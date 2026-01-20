@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import mermaid from 'mermaid';
-import { Card, Typography, Breadcrumb, Space, Divider, Skeleton } from 'antd';
-import { FileTextOutlined, HomeOutlined } from '@ant-design/icons';
+import { Card, Typography, Breadcrumb, Space, Divider, Skeleton, Row, Col, Anchor, ConfigProvider } from 'antd';
+import { FileTextOutlined, HomeOutlined, MenuOutlined } from '@ant-design/icons';
 // @ts-ignore
 import content from '../../../docs/business-rules.md?raw';
 
@@ -16,6 +16,16 @@ mermaid.initialize({
     securityLevel: 'loose',
     fontFamily: 'Inter, system-ui, sans-serif',
 });
+
+const slugify = (text: string) => {
+    return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\u4e00-\u9fa5-]+/g, '') // Keep Chinese characters
+        .replace(/--+/g, '-');
+};
 
 const Mermaid: React.FC<{ chart: string }> = ({ chart }) => {
     const ref = useRef<HTMLDivElement>(null);
@@ -77,8 +87,67 @@ const BusinessRules: React.FC = () => {
         return () => clearTimeout(timer);
     }, []);
 
+    const headings = useMemo(() => {
+        const lines = content.split('\n');
+        const h: { title: string; level: number; id: string }[] = [];
+        lines.forEach((line: string) => {
+            const match = line.match(/^(#{1,3})\s+(.*)$/);
+            if (match) {
+                const title = match[2].trim();
+                h.push({
+                    title,
+                    level: match[1].length,
+                    id: slugify(title)
+                });
+            }
+        });
+        return h;
+    }, []);
+
+    const anchorItems = useMemo(() => {
+        const items: any[] = [];
+        const stack: any[] = [];
+
+        headings.forEach(h => {
+            const item = {
+                key: h.id,
+                href: `#${h.id}`,
+                title: h.title,
+                children: []
+            };
+
+            if (h.level === 1) {
+                items.push(item);
+                stack[0] = item;
+            } else {
+                const parent = stack[h.level - 2];
+                if (parent) {
+                    parent.children.push(item);
+                    stack[h.level - 1] = item;
+                } else {
+                    // Fallback if structure is not perfect
+                    items.push(item);
+                    stack[h.level - 1] = item;
+                }
+            }
+        });
+
+        // Remove empty children arrays
+        const cleanItems = (list: any[]) => {
+            list.forEach(item => {
+                if (item.children.length === 0) {
+                    delete item.children;
+                } else {
+                    cleanItems(item.children);
+                }
+            });
+        };
+        cleanItems(items);
+        return items;
+    }, [headings]);
+
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
             <Breadcrumb style={{ marginBottom: 24 }}>
                 <Breadcrumb.Item href="/">
                     <HomeOutlined />
@@ -102,83 +171,113 @@ const BusinessRules: React.FC = () => {
                 <Text type="secondary">本页面内容同步自系统 PRD 文档，旨在为业务人员提供最新的规则指引。</Text>
             </div>
 
-            <Card
-                bordered={false}
-                style={{
-                    borderRadius: 16,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.5)'
-                }}
-            >
-                {loading ? (
-                    <Skeleton active paragraph={{ rows: 15 }} />
-                ) : (
-                    <div className="markdown-body">
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                                code({ inline, className, children, ...props }: any) {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    const lang = match ? match[1] : '';
+            <Row gutter={32}>
+                <Col span={18}>
+                    <Card
+                        bordered={false}
+                        style={{
+                            borderRadius: 16,
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+                            background: 'rgba(255, 255, 255, 0.8)',
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 255, 255, 0.5)',
+                        }}
+                    >
+                        {loading ? (
+                            <Skeleton active paragraph={{ rows: 15 }} />
+                        ) : (
+                            <div className="markdown-body">
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        code({ inline, className, children, ...props }: any) {
+                                            const match = /language-(\w+)/.exec(className || '');
+                                            const lang = match ? match[1] : '';
 
-                                    if (!inline && lang === 'mermaid') {
-                                        return <Mermaid chart={String(children).replace(/\n$/, '')} />;
-                                    }
+                                            if (!inline && lang === 'mermaid') {
+                                                return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+                                            }
 
-                                    return (
-                                        <code className={className} {...props} style={{
-                                            backgroundColor: 'rgba(0,0,0,0.04)',
-                                            padding: '2px 4px',
-                                            borderRadius: '4px',
-                                            fontSize: '90%'
-                                        }}>
-                                            {children}
-                                        </code>
-                                    );
-                                },
-                                h1: ({ children }) => <Title level={1} style={{ marginTop: 48, marginBottom: 24, paddingBottom: 16, borderBottom: '2px solid #f0f0f0' }}>{children}</Title>,
-                                h2: ({ children }) => <Title level={2} style={{ marginTop: 40, marginBottom: 20 }}>{children}</Title>,
-                                h3: ({ children }) => <Title level={3} style={{ marginTop: 32, marginBottom: 16 }}>{children}</Title>,
-                                p: ({ children }) => <p style={{ marginBottom: 16, lineHeight: 1.8, color: '#434343' }}>{children}</p>,
-                                ul: ({ children }) => <ul style={{ marginBottom: 16, paddingLeft: 24 }}>{children}</ul>,
-                                li: ({ children }) => <li style={{ marginBottom: 8 }}>{children}</li>,
-                                table: ({ children }) => (
-                                    <div style={{ overflowX: 'auto', marginBottom: 24 }}>
-                                        <table style={{
-                                            width: '100%',
-                                            borderCollapse: 'collapse',
-                                            borderRadius: '8px',
-                                            overflow: 'hidden',
-                                            border: '1px solid #f0f0f0'
-                                        }}>
-                                            {children}
-                                        </table>
-                                    </div>
-                                ),
-                                thead: ({ children }) => <thead style={{ backgroundColor: '#fafafa', textAlign: 'left' }}>{children}</thead>,
-                                th: ({ children }) => <th style={{ padding: '12px 16px', border: '1px solid #f0f0f0', fontWeight: 600 }}>{children}</th>,
-                                td: ({ children }) => <td style={{ padding: '12px 16px', border: '1px solid #f0f0f0' }}>{children}</td>,
-                                blockquote: ({ children }) => (
-                                    <blockquote style={{
-                                        margin: '24px 0',
-                                        padding: '16px 24px',
-                                        borderLeft: '4px solid #1677ff',
-                                        backgroundColor: '#e6f4ff',
-                                        borderRadius: '0 8px 8px 0',
-                                        color: '#003a8c'
-                                    }}>
-                                        {children}
-                                    </blockquote>
-                                ),
+                                            return (
+                                                <code className={className} {...props} style={{
+                                                    backgroundColor: 'rgba(0,0,0,0.04)',
+                                                    padding: '2px 4px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '90%'
+                                                }}>
+                                                    {children}
+                                                </code>
+                                            );
+                                        },
+                                        h1: ({ children }) => {
+                                            const title = String(children);
+                                            return <Title id={slugify(title)} level={1} style={{ marginTop: 48, marginBottom: 24, paddingBottom: 16, borderBottom: '2px solid #f0f0f0' }}>{children}</Title>;
+                                        },
+                                        h2: ({ children }) => {
+                                            const title = String(children);
+                                            return <Title id={slugify(title)} level={2} style={{ marginTop: 40, marginBottom: 20 }}>{children}</Title>;
+                                        },
+                                        h3: ({ children }) => {
+                                            const title = String(children);
+                                            return <Title id={slugify(title)} level={3} style={{ marginTop: 32, marginBottom: 16 }}>{children}</Title>;
+                                        },
+                                        p: ({ children }) => <p style={{ marginBottom: 16, lineHeight: 1.8, color: '#434343' }}>{children}</p>,
+                                        ul: ({ children }) => <ul style={{ marginBottom: 16, paddingLeft: 24 }}>{children}</ul>,
+                                        li: ({ children }) => <li style={{ marginBottom: 8 }}>{children}</li>,
+                                        table: ({ children }) => (
+                                            <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+                                                <table style={{
+                                                    width: '100%',
+                                                    borderCollapse: 'collapse',
+                                                    borderRadius: '8px',
+                                                    overflow: 'hidden',
+                                                    border: '1px solid #f0f0f0'
+                                                }}>
+                                                    {children}
+                                                </table>
+                                            </div>
+                                        ),
+                                        thead: ({ children }) => <thead style={{ backgroundColor: '#fafafa', textAlign: 'left' }}>{children}</thead>,
+                                        th: ({ children }) => <th style={{ padding: '12px 16px', border: '1px solid #f0f0f0', fontWeight: 600 }}>{children}</th>,
+                                        td: ({ children }) => <td style={{ padding: '12px 16px', border: '1px solid #f0f0f0' }}>{children}</td>,
+                                        blockquote: ({ children }) => (
+                                            <blockquote style={{
+                                                margin: '24px 0',
+                                                padding: '16px 24px',
+                                                borderLeft: '4px solid #1677ff',
+                                                backgroundColor: '#e6f4ff',
+                                                borderRadius: '0 8px 8px 0',
+                                                color: '#003a8c'
+                                            }}>
+                                                {children}
+                                            </blockquote>
+                                        ),
+                                    }}
+                                >
+                                    {content}
+                                </ReactMarkdown>
+                            </div>
+                        )}
+                    </Card>
+                </Col>
+                <Col span={6}>
+                    <div style={{ paddingLeft: 8 }}>
+                        {/* 使用 Affix 组件确保常驻 */}
+                        <Anchor
+                            offsetTop={88}
+                            items={anchorItems}
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.8)',
+                                backdropFilter: 'blur(20px)',
+                                padding: '16px',
+                                borderRadius: '16px',
+                                boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.5)',
                             }}
-                        >
-                            {content}
-                        </ReactMarkdown>
+                        />
                     </div>
-                )}
-            </Card>
+                </Col>
+            </Row>
 
             <style>{`
         .markdown-body img {
@@ -197,6 +296,9 @@ const BusinessRules: React.FC = () => {
         .mermaid-container svg {
           max-width: 100% !important;
           height: auto !important;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            scroll-margin-top: 80px;
         }
       `}</style>
         </div>
