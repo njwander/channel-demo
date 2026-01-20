@@ -12,7 +12,6 @@ import {
     Row,
     Col,
     DatePicker,
-    Tooltip,
     message,
     Modal,
     Upload
@@ -20,9 +19,6 @@ import {
 import {
     SearchOutlined,
     SyncOutlined,
-    EyeOutlined,
-    RedoOutlined,
-    StopOutlined,
     UploadOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -151,10 +147,7 @@ const ChannelList: FC = () => {
         fetchData()
     }
 
-    // 处理延期/续约
-    const handleRenew = (record: Channel) => {
-        message.info(`调起 ${record.companyName} 的续约流程...`)
-    }
+
 
     // 处理解约
     const handleTerminate = (record: Channel) => {
@@ -301,36 +294,27 @@ const ChannelList: FC = () => {
         {
             title: '操作',
             key: 'action',
-            width: 120,
+            width: 150,
             fixed: 'right' as const,
             render: (_: any, record: Channel) => (
-                <Space size="middle">
-                    <Tooltip title="查看详情">
-                        <Button
-                            type="text"
-                            icon={<EyeOutlined />}
-                            onClick={() => navigate(`/channel-detail/${record.id}`)}
-                        />
-                    </Tooltip>
-                    {record.status === 'expiring' && (
-                        <Tooltip title="续约">
-                            <Button
-                                type="text"
-                                icon={<RedoOutlined />}
-                                onClick={() => handleRenew(record)}
-                                style={{ color: '#fa8c16' }}
-                            />
-                        </Tooltip>
-                    )}
+                <Space size="small">
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => navigate(`/channel-detail/${record.id}`)}
+                    >
+                        详情
+                    </Button>
+
                     {record.status !== 'terminated' && (
-                        <Tooltip title="解约">
-                            <Button
-                                type="text"
-                                icon={<StopOutlined />}
-                                onClick={() => handleTerminate(record)}
-                                danger
-                            />
-                        </Tooltip>
+                        <Button
+                            type="link"
+                            size="small"
+                            onClick={() => handleTerminate(record)}
+                            danger
+                        >
+                            解约
+                        </Button>
                     )}
                 </Space>
             )
