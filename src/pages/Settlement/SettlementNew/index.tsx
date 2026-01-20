@@ -280,7 +280,7 @@ const SettlementNew: FC = () => {
                             onClick={handleNext}
                             style={{ background: '#ff5050', borderColor: '#ff5050' }}
                         >
-                            下一步：录入合作信息
+                            下一步：录入分佣配置
                         </Button>
                     ) : (
                         <Space>
@@ -304,7 +304,7 @@ const SettlementNew: FC = () => {
                     current={currentStep}
                     items={[
                         { title: '基本信息填写' },
-                        { title: '商务合作录入' }
+                        { title: '分佣配置录入' }
                     ]}
                     style={{ marginBottom: 40 }}
                 />
@@ -424,7 +424,7 @@ const SettlementNew: FC = () => {
                         </Card>
                     </div>
 
-                    {/* 第二步：商务合作信息 */}
+                    {/* 第二步：分佣配置信息 */}
                     <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
                         {/* 分佣配置 */}
                         <Card title="分佣配置" style={{ marginBottom: 24 }}>

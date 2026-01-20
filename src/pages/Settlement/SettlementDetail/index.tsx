@@ -368,8 +368,8 @@ const SettlementDetail: FC = () => {
                 </Col>
 
                 <Col span={8}>
-                    {/* 商务配置 */}
-                    <Card title="商务配置" style={{ marginBottom: 24 }}>
+                    {/* 分佣配置 */}
+                    <Card title="分佣配置" style={{ marginBottom: 24 }}>
                         <Descriptions column={1}>
                             <Descriptions.Item label="分佣类型">{data.commissionType}</Descriptions.Item>
                             {data.commissionRate && (
