@@ -51,4 +51,6 @@ export interface SettlementApplication {
     contractType?: 'standard' | 'non-standard' // 合同类型
     customContractUrl?: string    // 用户的非标合同文件路径
     contractAuditStatus?: 'pending' | 'approving' | 'approved' | 'rejected' // 非标合同审批状态
+    industry?: string            // 一级行业
+    scale?: string               // 企业规模
 }

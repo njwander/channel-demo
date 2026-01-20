@@ -113,6 +113,25 @@ const SettlementNew: FC = () => {
         setUploadModalVisible(true)
     }
 
+    // 模拟工商校验
+    const handleVerifyCompany = () => {
+        const companyName = form.getFieldValue('companyName');
+        if (!companyName) {
+            message.warning('请先输入公司全称');
+            return;
+        }
+        message.loading({ content: '正在校验工商信息...', key: 'verify' });
+        setTimeout(() => {
+            message.success({ content: '工商信息校验成功，信息已同步', key: 'verify' });
+            form.setFieldsValue({
+                socialCreditCode: '91510100MA6XXXXXXX',
+                city: ['sichuan', 'chengdu'],
+                industry: '制造行业',
+                scale: '100-500人'
+            });
+        }, 1000);
+    }
+
     const handleUploadOk = () => {
         setUploadModalVisible(false)
         setAnalyzing(true)
@@ -137,12 +156,12 @@ const SettlementNew: FC = () => {
     // 处理下一步
     const handleNext = async () => {
         try {
-            // 第一步校验字段：基本信息、联系信息、工商信息、客户资源证明（虽然可选但也要校验）
+            // 第一步校验字段：基本信息、联系信息、工商信息、客户资源证明
             await form.validateFields([
                 'companyName', 'city', 'detailedAddress',
                 'contactName', 'contactPhone', 'contactPosition', 'contactEmail', 'referrer',
                 'socialCreditCode', 'bankInfo', 'address',
-                'customerProof'
+                'customerProof', 'industry', 'scale'
             ])
             setCurrentStep(1)
             window.scrollTo(0, 0)
@@ -181,6 +200,7 @@ const SettlementNew: FC = () => {
             const newApp: SettlementApplication = {
                 id: orderId,
                 ...values,
+                city: Array.isArray(values.city) ? values.city.join('/') : values.city,
                 address: values.address ? (Array.isArray(values.address) ? values.address.join('/') : values.address) : '',
                 cooperationStartDate: values.cooperationDate[0].format('YYYY-MM-DD'),
                 cooperationEndDate: values.cooperationDate[1].format('YYYY-MM-DD'),
@@ -303,36 +323,48 @@ const SettlementNew: FC = () => {
                             <Row gutter={24}>
                                 <Col span={12}>
                                     <Form.Item
-                                        name="companyName"
-                                        label="公司全称"
-                                        validateTrigger="onBlur"
-                                        rules={[
-                                            { required: true, message: '请填写公司全称' },
-                                            { validator: checkDuplicateCompanyName }
-                                        ]}
+                                        label="渠道公司全称"
+                                        required
+                                        tooltip="需要与签订合同的公司名称一致"
                                     >
-                                        <Input placeholder="需与公章一致" />
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <Form.Item
+                                                name="companyName"
+                                                noStyle
+                                                validateTrigger="onBlur"
+                                                rules={[
+                                                    { required: true, message: '请填写公司全称' },
+                                                    { validator: checkDuplicateCompanyName }
+                                                ]}
+                                            >
+                                                <Input placeholder="请输入公司全称" style={{ flex: 1 }} />
+                                            </Form.Item>
+                                            <Button
+                                                type="link"
+                                                onClick={handleVerifyCompany}
+                                                style={{ padding: '4px 0', height: 'auto' }}
+                                            >
+                                                校验工商信息
+                                            </Button>
+                                        </div>
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
-                                    <Form.Item name="socialCreditCode" label="统一社会信用代码"
+                                    <Form.Item name="socialCreditCode" label="纳税人识别号"
                                         validateTrigger="onBlur"
                                         rules={[
-                                            { required: true, message: '请填写统一社会信用代码' }
+                                            { required: true, message: '请填写纳税人识别号/代码' }
                                         ]}
                                     >
                                         <Input placeholder="18位信用代码" />
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
-                                    <Form.Item name="city" label="所在城市" rules={[{ required: true }]}>
-                                        <Select placeholder="请选择">
-                                            <Option value="上海">上海</Option>
-                                            <Option value="北京">北京</Option>
-                                            <Option value="杭州">杭州</Option>
-                                            <Option value="成都">成都</Option>
-                                            <Option value="深圳">深圳</Option>
-                                        </Select>
+                                    <Form.Item name="city" label="省份/城市" rules={[{ required: true }]}>
+                                        <Cascader
+                                            options={AREA_OPTIONS}
+                                            placeholder="请选择省份/城市"
+                                        />
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
@@ -340,7 +372,6 @@ const SettlementNew: FC = () => {
                                         <Input placeholder="请填写详细地址" />
                                     </Form.Item>
                                 </Col>
-
                             </Row>
                         </Card>
 
@@ -355,22 +386,22 @@ const SettlementNew: FC = () => {
                                 <Col span={12}>
                                     <Form.Item
                                         name="contactPhone"
-                                        label="联系电话"
-                                        rules={[{ required: true, message: '请输入正确的手机号' }]}
+                                        label="手机号码"
+                                        rules={[{ required: true, message: '请输入正确的手机号码' }]}
                                     >
                                         <Input placeholder="11 位手机号" />
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
-                                    <Form.Item name="contactEmail" label="联系邮箱" rules={[{ required: true, message: '格式错误' }]}>
+                                    <Form.Item name="contactEmail" label="对接邮箱" rules={[{ required: true, type: 'email', message: '请输入正确的邮箱' }]}>
                                         <Input placeholder="用于接收电子账单" />
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
-                                    <Form.Item name="contactPosition" label="联系人职位" rules={[{ required: true }]}>
+                                    <Form.Item name="contactPosition" label="担任职位" rules={[{ required: true }]}>
                                         <Select placeholder="请选择职位">
                                             <Option value="CEO">CEO</Option>
-                                            <Option value="HR负责人">HR负责人</Option>
+                                            <Option value="运营负责人">运营负责人</Option>
                                             <Option value="销售负责人">销售负责人</Option>
                                             <Option value="IT负责人">IT负责人</Option>
                                             <Option value="市场负责人">市场负责人</Option>
