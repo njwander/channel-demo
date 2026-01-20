@@ -96,10 +96,10 @@ const SettlementList: FC = () => {
 
     // 状态样式映射
     const statusMap: Record<SettlementStatus, { color: string; text: string }> = {
-        pending: { color: 'blue', text: '待审批' },
-        processing: { color: 'orange', text: '审批中' },
+        pending: { color: 'orange', text: '待审批' },
         rejected: { color: 'red', text: '驳回' },
-        approved: { color: 'green', text: '通过' }
+        approved: { color: 'blue', text: '待签约' },
+        signed: { color: 'green', text: '已入驻' }
     }
 
     const columns = [
@@ -136,11 +136,11 @@ const SettlementList: FC = () => {
             width: 120
         },
         {
-            title: '审批通过日期',
+            title: '入驻日期',
             dataIndex: 'approvalDate',
             key: 'approvalDate',
             width: 120,
-            render: (text: string) => text || '-'
+            render: (text: string, record: SettlementApplication) => (record.auditStatus === 'signed' ? text : '-')
         },
         {
             title: '审批状态',
@@ -155,30 +155,21 @@ const SettlementList: FC = () => {
             title: '操作',
             key: 'action',
             render: (_: any, record: SettlementApplication) => (
-                <Space size="middle">
-                    <Tooltip title="查看详情">
-                        <Button
-                            type="text"
-                            icon={<EyeOutlined />}
-                            onClick={() => navigate(`/settlement-detail/${record.id}`)}
-                        />
-                    </Tooltip>
+                <Space size="small">
+                    <Button type="link" size="small" onClick={() => navigate(`/settlement-detail/${record.id}`)}>详情</Button>
                     {record.auditStatus === 'rejected' && (
-                        <Tooltip title="修改">
-                            <Button
-                                type="text"
-                                icon={<FormOutlined />}
-                                onClick={() => navigate(`/settlement-edit/${record.id}`)}
-                            />
-                        </Tooltip>
+                        <Button type="link" size="small" onClick={() => navigate(`/settlement-new?id=${record.id}`)}>编辑</Button>
                     )}
-                    <Tooltip title="质量检查">
+                    {record.auditStatus === 'approved' && (
                         <Button
-                            type="text"
-                            icon={<SafetyCertificateOutlined />}
-                            onClick={() => navigate(`/settlement-quality-check?id=${record.id}`)}
-                        />
-                    </Tooltip>
+                            type="link"
+                            size="small"
+                            disabled={record.contractType === 'non-standard' && record.contractAuditStatus !== 'approved'}
+                            onClick={() => window.open('https://example.com/signing-platform', '_blank')}
+                        >
+                            签约
+                        </Button>
+                    )}
                 </Space>
             )
         }
@@ -217,9 +208,9 @@ const SettlementList: FC = () => {
                                 <Select placeholder="请选择" allowClear>
                                     <Select.Option value="all">全部</Select.Option>
                                     <Select.Option value="pending">待审批</Select.Option>
-                                    <Select.Option value="processing">审批中</Select.Option>
                                     <Select.Option value="rejected">驳回</Select.Option>
-                                    <Select.Option value="approved">通过</Select.Option>
+                                    <Select.Option value="approved">待签约</Select.Option>
+                                    <Select.Option value="signed">已入驻</Select.Option>
                                 </Select>
                             </Form.Item>
                         </Col>

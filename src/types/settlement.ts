@@ -1,7 +1,11 @@
 /**
  * 入驻审批状态
+ * pending: 待审批
+ * rejected: 已驳回
+ * approved: 待签约 (审批通过)
+ * signed: 已归档 (完成签署)
  */
-export type SettlementStatus = 'pending' | 'processing' | 'rejected' | 'approved'
+export type SettlementStatus = 'pending' | 'rejected' | 'approved' | 'signed'
 
 /**
  * 客户入驻质量检查结果
@@ -44,4 +48,7 @@ export interface SettlementApplication {
     approvalDate?: string        // 审批通过日期 (YYYY-MM-DD)
     ruleId?: string              // 分佣规则ID
     qualityCheckResults?: QualityCheckItem[] // 客户资源质检结果
+    contractType?: 'standard' | 'non-standard' // 合同类型
+    customContractUrl?: string    // 用户的非标合同文件路径
+    contractAuditStatus?: 'pending' | 'approving' | 'approved' | 'rejected' // 非标合同审批状态
 }

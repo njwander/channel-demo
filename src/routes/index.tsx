@@ -3,7 +3,7 @@ import MainLayout from '../layouts/MainLayout'
 import Dashboard from '../pages/Dashboard'
 import SettlementList from '../pages/Settlement/SettlementList'
 import SettlementNew from '../pages/Settlement/SettlementNew'
-import SettlementQualityCheck from '../pages/Settlement/SettlementQualityCheck'
+import SettlementDetail from '../pages/Settlement/SettlementDetail'
 import ChannelList from '../pages/Channel/ChannelList'
 import ChannelDetail from '../pages/Channel/ChannelDetail'
 import ReportingList from '../pages/Reporting/ReportingList'
@@ -35,7 +35,7 @@ const AppRoutes = () => {
                 {/* 入驻申请 */}
                 <Route path="settlement-list" element={<SettlementList />} />
                 <Route path="settlement-new" element={<SettlementNew />} />
-                <Route path="settlement-quality-check" element={<SettlementQualityCheck />} />
+                <Route path="settlement-detail/:id" element={<SettlementDetail />} />
 
                 {/* 渠道管理 */}
                 <Route path="channel-list" element={<ChannelList />} />

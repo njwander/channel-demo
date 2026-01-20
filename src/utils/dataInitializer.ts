@@ -16,7 +16,22 @@ const STORAGE_KEYS = {
 export const initData = async () => {
     try {
         // 1. 如果没有数据，或者需要强制刷新（演示需要），则初始化
-        if (!localStorage.getItem(STORAGE_KEYS.SETTLEMENT)) {
+        const storedSettlementData = localStorage.getItem(STORAGE_KEYS.SETTLEMENT)
+        let shouldInitSettlement = !storedSettlementData
+
+        if (storedSettlementData) {
+            try {
+                const parsed = JSON.parse(storedSettlementData)
+                if (Array.isArray(parsed) && (parsed.length !== settlementData.length || !parsed[0].contractAuditStatus)) {
+                    console.log('[数据初始化] ⚠️ Settlement data is outdated (count mismatch or missing fields), reloading...')
+                    shouldInitSettlement = true
+                }
+            } catch (e) {
+                shouldInitSettlement = true
+            }
+        }
+
+        if (shouldInitSettlement) {
             localStorage.setItem(STORAGE_KEYS.SETTLEMENT, JSON.stringify(settlementData))
             console.log('[数据初始化] ✅ Settlement data loaded')
         }
