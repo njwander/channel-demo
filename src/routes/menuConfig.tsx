@@ -7,7 +7,8 @@ import {
     SettingOutlined,
     BarChartOutlined,
     FileTextOutlined,
-    EditOutlined
+    EditOutlined,
+    BookOutlined
 } from '@ant-design/icons'
 
 import type { MenuProps } from 'antd'
@@ -75,6 +76,12 @@ export const menuItems: MenuItem[] = [
                 path: '/performance/commission-rules',
             },
         ],
+    } as MenuItem,
+    {
+        key: 'business-rules',
+        label: '业务规则',
+        icon: <BookOutlined />,
+        path: '/business-rules',
     } as MenuItem,
 ]
 

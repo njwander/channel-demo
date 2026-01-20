@@ -15,6 +15,7 @@ import OrderReconciliation from '../pages/Performance/OrderReconciliation'
 import Termination from '../pages/Termination/Termination'
 import CommissionRuleList from '../pages/Performance/CommissionRuleList'
 import CommissionRuleConfig from '../pages/Performance/CommissionRuleConfig'
+import BusinessRules from '../pages/BusinessRules'
 import NotFound from '../pages/NotFound'
 import { useEffect } from 'react'
 import { initData } from '../utils/dataInitializer'
@@ -55,6 +56,9 @@ const AppRoutes = () => {
 
                 {/* 渠道解约 */}
                 <Route path="termination" element={<Termination />} />
+
+                {/* 业务规则 */}
+                <Route path="business-rules" element={<BusinessRules />} />
 
                 <Route path="*" element={<Navigate to="/404" replace />} />
             </Route>
