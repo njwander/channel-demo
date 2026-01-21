@@ -19,7 +19,10 @@ import {
     Dropdown,
     Empty,
     Divider,
-    Upload
+    Upload,
+    Radio,
+    InputNumber,
+    DatePicker
 } from 'antd'
 import {
     ArrowLeftOutlined,
@@ -32,7 +35,12 @@ import {
     FilePdfOutlined,
     FileWordOutlined,
     PlusOutlined,
-    UploadOutlined
+    UploadOutlined,
+    DeleteOutlined,
+    SettingOutlined,
+    CheckCircleFilled,
+    InfoCircleOutlined,
+    CalendarOutlined
 } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -41,6 +49,17 @@ import type { Reporting } from '../../../types/reporting'
 
 const { Title, Text } = Typography
 const { Option } = Select
+
+// 标准规则
+const DEFAULT_SYSTEM_RULE = {
+    id: 'RULE_DEFAULT',
+    name: '系统默认规则',
+    tiers: [
+        { min: 0, max: 50, rate: 20 },
+        { min: 50, max: 100, rate: 25 },
+        { min: 100, max: null, rate: 30 }
+    ]
+};
 
 /**
  * 渠道详情页
@@ -55,10 +74,19 @@ const ChannelDetail: FC = () => {
     // 弹窗状态
     const [isCommissionModalVisible, setIsCommissionModalVisible] = useState(false)
     const [commissionForm] = Form.useForm()
+    const [isSpecialMode, setIsSpecialMode] = useState(false)
+
+    // 变更负责人相关状态
+    const [isOwnerModalVisible, setIsOwnerModalVisible] = useState(false)
+    const [ownerForm] = Form.useForm()
 
     // 解约相关状态
     const [terminateModalVisible, setTerminateModalVisible] = useState(false)
     const [terminateForm] = Form.useForm()
+
+    // 业绩周期变更状态
+    const [isCycleModalVisible, setIsCycleModalVisible] = useState(false)
+    const [cycleForm] = Form.useForm()
 
     // 获取数据
     const fetchData = () => {
@@ -104,14 +132,81 @@ const ChannelDetail: FC = () => {
     const handleCommissionSubmit = async () => {
         try {
             const values = await commissionForm.validateFields()
+
+            // 校验区间合理性
+            if (isSpecialMode && values.commissionType === 'custom_ladder') {
+                const tiers = values.commissionTiers;
+                const sortedTiers = [...tiers].sort((a, b) => a.min - b.min);
+                for (let i = 0; i < sortedTiers.length; i++) {
+                    if (sortedTiers[i].max !== null && sortedTiers[i].max !== undefined && sortedTiers[i].min >= sortedTiers[i].max!) {
+                        message.error(`特殊分佣梯度 ${i + 1} 的最小值必须小于最大值`);
+                        return;
+                    }
+                    if (i > 0 && sortedTiers[i].min !== sortedTiers[i - 1].max) {
+                        message.error(`特殊分佣梯度 ${i + 1} 的起始值必须等于上一个梯度的截止值`);
+                        return;
+                    }
+                }
+                if (sortedTiers[0].min !== 0) {
+                    message.error('第一个梯度的起始值必须为 0');
+                    return;
+                }
+            }
+
             message.loading({ content: '正在发起变更申请...', key: 'changing' })
 
             setTimeout(() => {
-                message.success({ content: '分佣配置变更申请已提交，等待业务审批', key: 'changing' })
-                setIsCommissionModalVisible(false)
-                commissionForm.resetFields()
-                // 实际业务中这里会产生一个审批流记录，并将渠道状态标记为“变更中”
+                const storedData = localStorage.getItem('channel_data')
+                if (storedData && data) {
+                    const channels: Channel[] = JSON.parse(storedData)
+                    const updatedChannels = channels.map(c => {
+                        if (c.id === data.id) {
+                            return {
+                                ...c,
+                                commissionType: isSpecialMode ? values.commissionType : 'custom_ladder',
+                                commissionRate: isSpecialMode && values.commissionType === 'fixed' ? `${values.commissionRate}%` : undefined,
+                                commissionTiers: isSpecialMode ? (values.commissionType === 'custom_ladder' ? values.commissionTiers : undefined) : DEFAULT_SYSTEM_RULE.tiers,
+                                ruleId: isSpecialMode ? undefined : DEFAULT_SYSTEM_RULE.id
+                            }
+                        }
+                        return c
+                    })
+                    localStorage.setItem('channel_data', JSON.stringify(updatedChannels))
+                    message.success({ content: '分佣配置变更成功', key: 'changing' })
+                    setIsCommissionModalVisible(false)
+                    fetchData()
+                }
             }, 1000)
+        } catch (error) {
+            console.error('Validation Failed:', error)
+        }
+    }
+
+    // 提交变更负责人
+    const handleOwnerSubmit = async () => {
+        try {
+            const values = await ownerForm.validateFields()
+            if (!data) return
+
+            message.loading({ content: '正在变更负责人...', key: 'owner_changing' })
+
+            setTimeout(() => {
+                const storedData = localStorage.getItem('channel_data')
+                if (storedData) {
+                    const channels: Channel[] = JSON.parse(storedData)
+                    const updatedChannels = channels.map(c => {
+                        if (c.id === data.id) {
+                            return { ...c, owner: values.newOwner }
+                        }
+                        return c
+                    })
+                    localStorage.setItem('channel_data', JSON.stringify(updatedChannels))
+                    message.success({ content: `负责人已成功变更为：${values.newOwner}`, key: 'owner_changing' })
+                    setIsOwnerModalVisible(false)
+                    ownerForm.resetFields()
+                    fetchData()
+                }
+            }, 800)
         } catch (error) {
             console.error('Validation Failed:', error)
         }
@@ -189,6 +284,40 @@ const ChannelDetail: FC = () => {
     }
 
 
+    // 提交业绩周期变更
+    const handleCycleSubmit = async () => {
+        try {
+            const values = await cycleForm.validateFields()
+            if (!data) return
+
+            message.loading({ content: '正在调整业绩周期...', key: 'cycle_changing' })
+
+            setTimeout(() => {
+                const storedData = localStorage.getItem('channel_data')
+                if (storedData) {
+                    const channels: Channel[] = JSON.parse(storedData)
+                    const updatedChannels = channels.map(c => {
+                        if (c.id === data.id) {
+                            return {
+                                ...c,
+                                startDate: values.startDate.format('YYYY-MM-DD'),
+                                endDate: values.endDate.format('YYYY-MM-DD')
+                            }
+                        }
+                        return c
+                    })
+                    localStorage.setItem('channel_data', JSON.stringify(updatedChannels))
+                    message.success({ content: '业绩周期调整成功', key: 'cycle_changing' })
+                    setIsCycleModalVisible(false)
+                    fetchData()
+                }
+            }, 800)
+        } catch (error) {
+            console.error('Validation Failed:', error)
+        }
+    }
+
+
     if (!data && !loading) return <div style={{ padding: 24 }}><Empty description="未找到渠道资料" /></div>
 
     return (
@@ -213,8 +342,37 @@ const ChannelDetail: FC = () => {
                     <Dropdown
                         menu={{
                             items: [
-                                { key: '1', label: '变更负责人', icon: <UserOutlined /> },
-                                { key: '2', label: '分佣配置变更', icon: <SafetyCertificateOutlined />, onClick: () => setIsCommissionModalVisible(true) },
+                                {
+                                    key: '1', label: '变更负责人', icon: <UserOutlined />, onClick: () => {
+                                        ownerForm.setFieldsValue({ currentOwner: data?.owner })
+                                        setIsOwnerModalVisible(true)
+                                    }
+                                },
+                                {
+                                    key: '2', label: '分佣配置变更', icon: <SafetyCertificateOutlined />, onClick: () => {
+                                        if (data) {
+                                            const isSpecial = data.ruleId !== DEFAULT_SYSTEM_RULE.id;
+                                            setIsSpecialMode(isSpecial);
+                                            commissionForm.setFieldsValue({
+                                                commissionType: data.commissionType === 'fixed' ? 'fixed' : 'custom_ladder',
+                                                commissionRate: data.commissionRate ? parseFloat(data.commissionRate) : undefined,
+                                                commissionTiers: data.commissionTiers || (data.ruleId === DEFAULT_SYSTEM_RULE.id ? DEFAULT_SYSTEM_RULE.tiers : [])
+                                            });
+                                        }
+                                        setIsCommissionModalVisible(true)
+                                    }
+                                },
+                                {
+                                    key: '3', label: '调整业绩周期', icon: <CalendarOutlined />, onClick: () => {
+                                        if (data) {
+                                            cycleForm.setFieldsValue({
+                                                startDate: dayjs(data.startDate),
+                                                endDate: dayjs(data.endDate)
+                                            })
+                                        }
+                                        setIsCycleModalVisible(true)
+                                    }
+                                },
                                 { type: 'divider' },
                                 { key: '4', label: '解约', icon: <HistoryOutlined />, danger: true, onClick: handleTerminate, disabled: data?.status === 'terminated' },
                             ]
@@ -268,6 +426,7 @@ const ChannelDetail: FC = () => {
                                         >
                                             <Descriptions column={2}>
                                                 <Descriptions.Item label="分佣类型">{data ? commissionTypeMap[data.commissionType] : '-'}</Descriptions.Item>
+                                                <Descriptions.Item label="渠道负责人">{data?.owner || '未分配'}</Descriptions.Item>
                                                 <Descriptions.Item label="当前配置">
                                                     {data?.commissionTiers ? (
                                                         <Space direction="vertical" style={{ width: '100%' }} size={2}>
@@ -280,7 +439,7 @@ const ChannelDetail: FC = () => {
                                                     ) : data?.commissionType === 'fixed' ? `${data.commissionRate || 10}%` :
                                                         data?.commissionType === 'custom_ladder' ? '系统标准阶梯' : '按协议约定'}
                                                 </Descriptions.Item>
-                                                <Descriptions.Item label="合作有效期">{`${data?.startDate} 至 ${data?.endDate}`}</Descriptions.Item>
+                                                <Descriptions.Item label="业绩周期">{`${data?.startDate} 至 ${data?.endDate}`}</Descriptions.Item>
                                             </Descriptions>
                                         </Card>
                                         <Card title="联系人列表" size="small">
@@ -394,68 +553,259 @@ const ChannelDetail: FC = () => {
                 </Col>
             </Row>
 
+            {/* 变更负责人弹窗 */}
+            <Modal
+                title="变更渠道负责人"
+                open={isOwnerModalVisible}
+                onOk={handleOwnerSubmit}
+                onCancel={() => {
+                    setIsOwnerModalVisible(false)
+                    ownerForm.resetFields()
+                }}
+                destroyOnClose
+            >
+                <Form form={ownerForm} layout="vertical" style={{ marginTop: 16 }}>
+                    <Form.Item name="currentOwner" label="当前负责人">
+                        <Input disabled />
+                    </Form.Item>
+                    <Form.Item
+                        name="newOwner"
+                        label="拟变更负责人"
+                        rules={[{ required: true, message: '请选择新负责人' }]}
+                    >
+                        <Select placeholder="请选择新的内部负责人">
+                            <Option value="张三">张三 (销售一部)</Option>
+                            <Option value="李四">李四 (销售二部)</Option>
+                            <Option value="王五">王五 (渠道合作部)</Option>
+                            <Option value="赵六">赵六 (大客户部)</Option>
+                        </Select>
+                    </Form.Item>
+                    <Form.Item
+                        name="reason"
+                        label="变更原因"
+                        rules={[{ required: true, message: '请输入变更原因' }]}
+                    >
+                        <Input.TextArea placeholder="请输入变更原因，如：人员离职、业务调整等" rows={3} />
+                    </Form.Item>
+                </Form>
+            </Modal>
+
             {/* 分佣配置变更弹窗 */}
             <Modal
                 title="分佣配置变更申请"
                 open={isCommissionModalVisible}
                 onOk={handleCommissionSubmit}
                 onCancel={() => setIsCommissionModalVisible(false)}
-                width={600}
+                width={700}
                 destroyOnClose
             >
                 <div style={{ marginBottom: 20, padding: '12px', background: '#fff7e6', border: '1px solid #ffe58f', borderRadius: 4 }}>
-                    <Text type="warning">注意：修改分佣配置将重新发起业务审批流程，审批通过前仍执行原配置。</Text>
+                    <Text type="warning">注意：修改分佣配置建议在合同签约周期开始前进行。变更后的配置将在审批通过后生效。</Text>
                 </div>
+
                 <Form form={commissionForm} layout="vertical">
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item label="当前配置类型">
-                                <Input value={data ? commissionTypeMap[data.commissionType] : '-'} disabled />
+                    {!isSpecialMode ? (
+                        <div style={{
+                            padding: '32px 24px',
+                            textAlign: 'center',
+                            background: '#f8f9fb',
+                            borderRadius: 12,
+                            border: '1px dashed #d9d9d9'
+                        }}>
+                            <CheckCircleFilled style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
+                            <Title level={4} style={{ marginBottom: 8 }}>影刀标准分佣方案</Title>
+
+                            <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center', gap: 12 }}>
+                                <Tag icon={<InfoCircleOutlined />} color="blue" style={{ padding: '2px 10px', borderRadius: 4 }}>
+                                    业绩累计周期：每个签约周期（1年内）
+                                </Tag>
+                                <Tag color="cyan" style={{ padding: '2px 10px', borderRadius: 4 }}>
+                                    自动计算 实时生效
+                                </Tag>
+                            </div>
+
+                            <div style={{
+                                background: '#fff',
+                                padding: '16px',
+                                borderRadius: 8,
+                                maxWidth: 500,
+                                margin: '0 auto 24px',
+                                textAlign: 'left',
+                                border: '1px solid #f0f2f5'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, padding: '0 12px', opacity: 0.6 }}>
+                                    <Text strong style={{ fontSize: 12 }}>签约年度累计业绩 (万)</Text>
+                                    <Text strong style={{ fontSize: 12 }}>分佣比例 (%)</Text>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {DEFAULT_SYSTEM_RULE.tiers.map((tier, idx) => (
+                                        <div key={idx} style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            padding: '10px 16px',
+                                            background: '#fcfcfc',
+                                            borderRadius: 6,
+                                            border: '1px solid #f0f0f0'
+                                        }}>
+                                            <Text style={{ fontSize: 14 }}>{tier.min}万 {tier.max ? `- ${tier.max}万` : '以上'}</Text>
+                                            <Text strong style={{ color: '#ff5050', fontSize: 16 }}>{tier.rate}%</Text>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <Button
+                                type="link"
+                                icon={<SettingOutlined />}
+                                onClick={() => setIsSpecialMode(true)}
+                                style={{ color: '#8c8c8c' }}
+                            >
+                                需要特殊配置？申请特殊分佣规则
+                            </Button>
+                        </div>
+                    ) : (
+                        <div style={{ background: '#fff', borderRadius: 8, border: '1px solid #f0f0f0', padding: 24 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                                <Space>
+                                    <SettingOutlined style={{ color: '#ff5050' }} />
+                                    <Title level={5} style={{ margin: 0 }}>特殊分佣方案配置</Title>
+                                </Space>
+                                <Button type="link" onClick={() => {
+                                    setIsSpecialMode(false)
+                                    commissionForm.setFieldsValue({
+                                        commissionType: 'custom_ladder',
+                                        commissionTiers: DEFAULT_SYSTEM_RULE.tiers
+                                    })
+                                }}>恢复标准规则</Button>
+                            </div>
+
+                            <Form.Item name="commissionType" label="分佣形式">
+                                <Radio.Group>
+                                    <Radio value="custom_ladder">阶梯分佣</Radio>
+                                    <Radio value="fixed">固定分佣</Radio>
+                                </Radio.Group>
                             </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="当前比例/规则">
-                                <Input value={data?.commissionRate || (data?.ruleId || '默认')} disabled />
+
+                            <Form.Item noStyle shouldUpdate={(prev, curr) => prev.commissionType !== curr.commissionType}>
+                                {({ getFieldValue }) => {
+                                    const type = getFieldValue('commissionType')
+                                    if (type === 'fixed') {
+                                        return (
+                                            <Form.Item name="commissionRate" label="固定分佣比例 (%)" rules={[{ required: true, message: '请输入比例' }]}>
+                                                <InputNumber min={0} max={100} style={{ width: 200 }} suffix="%" />
+                                            </Form.Item>
+                                        )
+                                    }
+                                    return (
+                                        <>
+                                            <Divider dashed style={{ margin: '0 0 24px' }}>阶梯明细</Divider>
+                                            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-start' }}>
+                                                <Tag icon={<InfoCircleOutlined />} color="blue" style={{ padding: '2px 10px', borderRadius: 4 }}>
+                                                    业绩累计周期：每个签约周期（1年内）
+                                                </Tag>
+                                            </div>
+                                            <Form.List name="commissionTiers">
+                                                {(fields, { add, remove }) => (
+                                                    <>
+                                                        {fields.map(({ key, name, ...restField }, index) => (
+                                                            <Row key={key} gutter={16} align="middle" style={{ marginBottom: 12 }}>
+                                                                <Col span={7}>
+                                                                    <Form.Item
+                                                                        {...restField}
+                                                                        name={[name, 'min']}
+                                                                        label={index === 0 ? "业绩下限 (万)" : ""}
+                                                                        rules={[{ required: true }]}
+                                                                    >
+                                                                        <InputNumber style={{ width: '100%' }} disabled={index === 0} placeholder="起点" />
+                                                                    </Form.Item>
+                                                                </Col>
+                                                                <Col span={1} style={{ textAlign: 'center', paddingTop: index === 0 ? 30 : 0 }}>至</Col>
+                                                                <Col span={7}>
+                                                                    <Form.Item
+                                                                        {...restField}
+                                                                        name={[name, 'max']}
+                                                                        label={index === 0 ? "业绩上限 (万)" : ""}
+                                                                    >
+                                                                        <InputNumber style={{ width: '100%' }} placeholder="无上限" />
+                                                                    </Form.Item>
+                                                                </Col>
+                                                                <Col span={6}>
+                                                                    <Form.Item
+                                                                        {...restField}
+                                                                        name={[name, 'rate']}
+                                                                        label={index === 0 ? "分佣比例 (%)" : ""}
+                                                                        rules={[{ required: true }]}
+                                                                    >
+                                                                        <InputNumber style={{ width: '100%' }} min={0} max={100} />
+                                                                    </Form.Item>
+                                                                </Col>
+                                                                <Col span={3} style={{ paddingTop: index === 0 ? 30 : 0 }}>
+                                                                    {fields.length > 1 && (
+                                                                        <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} />
+                                                                    )}
+                                                                </Col>
+                                                            </Row>
+                                                        ))}
+                                                        <Form.Item>
+                                                            <Button type="dashed" onClick={() => {
+                                                                const tiers = commissionForm.getFieldValue('commissionTiers');
+                                                                const lastTier = tiers[tiers.length - 1];
+                                                                add({
+                                                                    min: lastTier?.max || 0,
+                                                                    max: lastTier?.max ? lastTier.max + 50 : null,
+                                                                    rate: (lastTier?.rate || 0) + 5
+                                                                });
+                                                            }} block icon={<PlusOutlined />}>
+                                                                添加梯度
+                                                            </Button>
+                                                        </Form.Item>
+                                                    </>
+                                                )}
+                                            </Form.List>
+                                        </>
+                                    )
+                                }}
                             </Form.Item>
-                        </Col>
-                    </Row>
-                    <Divider style={{ margin: '12px 0' }} />
-                    <Form.Item name="newType" label="拟变更类型" rules={[{ required: true, message: '请选择变更后的类型' }]}>
-                        <Select placeholder="请选择新的分佣类型">
-                            <Select.Option value="custom_ladder">阶梯分佣</Select.Option>
-                            <Select.Option value="fixed">固定分佣</Select.Option>
-                            <Select.Option value="personalized">协议分佣</Select.Option>
-                        </Select>
+                        </div>
+                    )}
+                </Form>
+            </Modal>
+
+            {/* 业绩周期变更弹窗 */}
+            <Modal
+                title="调整业绩周期"
+                open={isCycleModalVisible}
+                onOk={handleCycleSubmit}
+                onCancel={() => setIsCycleModalVisible(false)}
+                destroyOnClose
+            >
+                <div style={{ marginBottom: 20, padding: '12px', background: '#e6f7ff', border: '1px solid #91d5ff', borderRadius: 4 }}>
+                    <Text type="secondary"><InfoCircleOutlined style={{ color: '#1890ff', marginRight: 8 }} />业绩周期通常为一年。设置开始日期后，系统将自动计算截止日期。</Text>
+                </div>
+                <Form form={cycleForm} layout="vertical">
+                    <Form.Item
+                        name="startDate"
+                        label="业绩开始日期"
+                        rules={[{ required: true, message: '请选择开始日期' }]}
+                    >
+                        <DatePicker
+                            style={{ width: '100%' }}
+                            onChange={(date) => {
+                                if (date) {
+                                    cycleForm.setFieldsValue({
+                                        endDate: date.add(1, 'year').subtract(1, 'day')
+                                    })
+                                }
+                            }}
+                        />
                     </Form.Item>
-                    <Form.Item noStyle shouldUpdate={(p, c) => p.newType !== c.newType}>
-                        {({ getFieldValue }) => {
-                            const newType = getFieldValue('newType');
-                            if (newType === 'fixed') {
-                                return (
-                                    <Form.Item name="newRate" label="拟变更固定比例 (%)" rules={[{ required: true }]}>
-                                        <Input type="number" suffix="%" />
-                                    </Form.Item>
-                                )
-                            }
-                            if (newType === 'custom_ladder') {
-                                return (
-                                    <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4, marginBottom: 24 }}>
-                                        <Text type="secondary">将应用系统标准阶梯分佣比例。</Text>
-                                    </div>
-                                )
-                            }
-                            if (newType === 'personalized') {
-                                return (
-                                    <Form.Item name="description" label="拟变更协议说明" rules={[{ required: true }]}>
-                                        <Input.TextArea rows={3} />
-                                    </Form.Item>
-                                )
-                            }
-                            return null;
-                        }}
-                    </Form.Item>
-                    <Form.Item name="reason" label="变更原因说明" rules={[{ required: true, message: '请输入申请变更的原因' }]}>
-                        <Input.TextArea placeholder="请详细说明为什么要调整该渠道的分佣政策" rows={4} />
+                    <Form.Item
+                        name="endDate"
+                        label="业绩截止日期"
+                        tooltip="自动计算：开始日期 + 1年"
+                    >
+                        <DatePicker style={{ width: '100%' }} disabled />
                     </Form.Item>
                 </Form>
             </Modal>

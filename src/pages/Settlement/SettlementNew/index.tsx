@@ -17,7 +17,8 @@ import {
     Tag,
     InputNumber,
     Select,
-    Radio
+    Radio,
+    DatePicker
 } from 'antd'
 import {
     PlusOutlined,
@@ -26,7 +27,9 @@ import {
     InboxOutlined,
     CheckCircleFilled,
     SettingOutlined,
-    DeleteOutlined
+    DeleteOutlined,
+    InfoCircleOutlined,
+    CalendarOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -86,9 +89,12 @@ const SettlementNew: FC = () => {
 
     // 初始化表单值
     useEffect(() => {
+        const start = dayjs();
         form.setFieldsValue({
             commissionType: '阶梯分佣',
-            commissionTiers: DEFAULT_SYSTEM_RULE.tiers
+            commissionTiers: DEFAULT_SYSTEM_RULE.tiers,
+            cooperationStartDate: start,
+            cooperationEndDate: start.add(1, 'year').subtract(1, 'day')
         })
     }, [form])
 
@@ -214,8 +220,8 @@ const SettlementNew: FC = () => {
                 ...values,
                 city: Array.isArray(values.city) ? values.city.join('/') : values.city,
                 address: values.address ? (Array.isArray(values.address) ? values.address.join('/') : values.address) : '',
-                cooperationStartDate: dayjs().format('YYYY-MM-DD'),
-                cooperationEndDate: dayjs().add(1, 'year').format('YYYY-MM-DD'),
+                cooperationStartDate: values.cooperationStartDate.format('YYYY-MM-DD'),
+                cooperationEndDate: values.cooperationEndDate.format('YYYY-MM-DD'),
                 applyTime: dayjs().format('YYYY-MM-DD'),
                 auditStatus: 'pending',
                 signContractUrl: '/contracts/example.pdf',
@@ -397,6 +403,39 @@ const SettlementNew: FC = () => {
                                 <TextArea rows={4} placeholder="请输入意向客户工商名称（每行一个）" />
                             </Form.Item>
                         </Card>
+
+                        <Card title="业绩归属周期" style={{ marginBottom: 24 }}>
+                            <Row gutter={24}>
+                                <Col span={12}>
+                                    <Form.Item
+                                        name="cooperationStartDate"
+                                        label="业绩计算开始日期"
+                                        rules={[{ required: true, message: '请选择开始日期' }]}
+                                        tooltip="该日期通常为合同签署日或合作开展首日"
+                                    >
+                                        <DatePicker
+                                            style={{ width: '100%' }}
+                                            onChange={(date) => {
+                                                if (date) {
+                                                    form.setFieldsValue({
+                                                        cooperationEndDate: date.add(1, 'year').subtract(1, 'day')
+                                                    })
+                                                }
+                                            }}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={12}>
+                                    <Form.Item
+                                        name="cooperationEndDate"
+                                        label="业绩计算截止日期"
+                                        tooltip="自动计算：开始日期 + 1年"
+                                    >
+                                        <DatePicker style={{ width: '100%' }} disabled />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                        </Card>
                     </div>
 
                     {/* 第二步：分佣配置信息 */}
@@ -404,46 +443,78 @@ const SettlementNew: FC = () => {
                         <Card title="分佣配置" bordered={false} bodyStyle={{ padding: 0 }}>
                             {!isSpecialMode ? (
                                 <div style={{
-                                    padding: '40px 24px',
+                                    padding: '48px 24px',
                                     textAlign: 'center',
                                     background: '#fff',
-                                    borderRadius: 8,
-                                    border: '1px solid #f0f0f0'
+                                    borderRadius: 12,
+                                    border: '1px dashed #d9d9d9'
                                 }}>
-                                    <CheckCircleFilled style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
-                                    <Title level={4}>影刀标准分佣方案</Title>
-                                    <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
-                                        当前默认应用系统标准分佣阶梯，无需手动配置。
-                                    </Text>
-
-                                    <div style={{
-                                        background: '#fafafa',
-                                        padding: '16px',
-                                        borderRadius: 8,
-                                        maxWidth: 500,
-                                        margin: '0 auto 32px',
-                                        textAlign: 'left'
-                                    }}>
-                                        <div style={{ marginBottom: 12 }}>
-                                            <Tag color="red">系统标准</Tag>
-                                            <Text strong>{DEFAULT_SYSTEM_RULE.name}</Text>
+                                    <CheckCircleFilled style={{ fontSize: 56, color: '#52c41a', marginBottom: 20 }} />
+                                    <Title level={3} style={{ marginBottom: 12 }}>影刀标准分佣方案</Title>
+                                    <div style={{ marginBottom: 32 }}>
+                                        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 12 }}>
+                                            <Tag icon={<InfoCircleOutlined />} color="blue" style={{ padding: '4px 12px', borderRadius: 4 }}>
+                                                业绩累计周期：每个签约周期（1年内）
+                                            </Tag>
+                                            <Tag color="cyan" style={{ padding: '4px 12px', borderRadius: 4 }}>
+                                                自动计算 实时生效
+                                            </Tag>
                                         </div>
-                                        <Space wrap size={[16, 8]}>
-                                            {DEFAULT_SYSTEM_RULE.tiers.map((tier, idx) => (
-                                                <div key={idx} style={{ fontSize: 13, color: '#666' }}>
-                                                    {tier.min}万 - {tier.max ? `${tier.max}万` : '以上'}：<Text strong style={{ color: '#ff5050' }}>{tier.rate}%</Text>
-                                                </div>
-                                            ))}
-                                        </Space>
                                     </div>
 
-                                    <Divider />
-                                    <Button
-                                        icon={<SettingOutlined />}
-                                        onClick={() => setIsSpecialMode(true)}
-                                    >
-                                        申请特殊分佣规则
-                                    </Button>
+                                    <div style={{
+                                        background: '#f8f9fb',
+                                        padding: '24px',
+                                        borderRadius: 12,
+                                        maxWidth: 580,
+                                        margin: '0 auto 32px',
+                                        textAlign: 'left',
+                                        border: '1px solid #f0f2f5'
+                                    }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            marginBottom: 16,
+                                            padding: '0 16px',
+                                            opacity: 0.7
+                                        }}>
+                                            <Text strong style={{ fontSize: 13 }}>签约年度累计业绩 (万)</Text>
+                                            <Text strong style={{ fontSize: 13 }}>分佣比例 (%)</Text>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            {DEFAULT_SYSTEM_RULE.tiers.map((tier, idx) => (
+                                                <div key={idx} style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    padding: '14px 20px',
+                                                    background: '#fff',
+                                                    borderRadius: 10,
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                                                    transition: 'transform 0.2s',
+                                                    border: '1px solid #f0f0f0'
+                                                }}>
+                                                    <Text style={{ fontSize: 15, color: '#333' }}>
+                                                        {tier.min}万 {tier.max ? `- ${tier.max}万` : '以上'}
+                                                    </Text>
+                                                    <Text strong style={{ color: '#ff5050', fontSize: 18 }}>
+                                                        {tier.rate}%
+                                                    </Text>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: 24 }}>
+                                        <Button
+                                            type="link"
+                                            icon={<SettingOutlined />}
+                                            onClick={() => setIsSpecialMode(true)}
+                                            style={{ color: '#8c8c8c' }}
+                                        >
+                                            如有特殊业务场景，可申请特殊分佣规则
+                                        </Button>
+                                    </div>
                                 </div>
                             ) : (
                                 <Card style={{ background: '#fff', borderRadius: 8, border: '1px solid #ff5050' }}>
@@ -481,6 +552,11 @@ const SettlementNew: FC = () => {
                                             return (
                                                 <>
                                                     <Divider dashed style={{ margin: '0 0 24px' }}>阶梯明细</Divider>
+                                                    <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-start' }}>
+                                                        <Tag icon={<InfoCircleOutlined />} color="blue" style={{ padding: '2px 10px', borderRadius: 4 }}>
+                                                            业绩累计周期：每个签约周期（1年内）
+                                                        </Tag>
+                                                    </div>
                                                     <Form.List name="commissionTiers">
                                                         {(fields, { add, remove }) => (
                                                             <>
