@@ -33,7 +33,7 @@ import {
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
-import type { SettlementApplication } from '../../../types/settlement'
+import type { SettlementApplication } from '@/types/settlement'
 
 const { Title, Text } = Typography
 const { Option } = Select

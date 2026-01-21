@@ -36,7 +36,7 @@ import {
 } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
-import type { SettlementApplication, QualityCheckItem, SettlementStatus } from '../../../types/settlement'
+import type { SettlementApplication, QualityCheckItem, SettlementStatus } from '@/types/settlement'
 
 const { Title, Text, Paragraph } = Typography
 

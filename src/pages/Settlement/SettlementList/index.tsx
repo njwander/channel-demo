@@ -25,7 +25,7 @@ import {
     DownloadOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import type { SettlementApplication, SettlementStatus } from '../../../types/settlement'
+import type { SettlementApplication, SettlementStatus } from '@/types/settlement'
 
 const { RangePicker } = DatePicker
 

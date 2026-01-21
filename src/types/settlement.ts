@@ -16,7 +16,6 @@ export interface QualityCheckItem {
 }
 
 /**
-
  * 阶梯梯度定义
  */
 export interface LadderTier {
