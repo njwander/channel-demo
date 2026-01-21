@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import type { Channel, ChannelStatus, CommissionType } from '../../../types/channel'
 
-const { Title } = Typography
+const { Title, Text } = Typography
 const { RangePicker } = DatePicker
 const { Option } = Select
 
@@ -50,6 +50,11 @@ const ChannelList: FC = () => {
         return channels.map(channel => {
             const channelReportings = reportings.filter(r => r.channelId === channel.id)
             const convertedReportings = channelReportings.filter(r => r.status === 'converted')
+            const protectedReportings = channelReportings.filter(r => r.status === 'protected')
+
+            // 计算本月新增报备数 (P1)
+            const thisMonth = dayjs().startOf('month')
+            const monthNewReportings = channelReportings.filter(r => dayjs(r.reportingTime).isAfter(thisMonth))
 
             // 计算最近成交时间
             let lastConversionTime = '-'
@@ -57,13 +62,15 @@ const ChannelList: FC = () => {
                 const sorted = [...convertedReportings].sort((a, b) =>
                     dayjs(b.reportingTime).unix() - dayjs(a.reportingTime).unix()
                 )
-                lastConversionTime = dayjs(sorted[0].reportingTime).format('YYYY-MM-DD HH:mm')
+                lastConversionTime = dayjs(sorted[0].reportingTime).format('YYYY-MM-DD')
             }
 
             return {
                 ...channel,
                 totalReportings: channelReportings.length,
                 totalConverted: convertedReportings.length,
+                protectedCount: protectedReportings.length,
+                monthNewCount: monthNewReportings.length,
                 lastConversionTime
             }
         })
@@ -108,12 +115,6 @@ const ChannelList: FC = () => {
                         filteredData = filteredData.filter(item => item.status === values.status)
                     }
 
-                    // 分佣类型过滤
-                    if (values.commissionType && values.commissionType !== 'all') {
-                        filteredData = filteredData.filter(item => item.commissionType === values.commissionType)
-                    }
-
-
                     // 负责人过滤
                     if (values.owner) {
                         filteredData = filteredData.filter(item =>
@@ -145,10 +146,6 @@ const ChannelList: FC = () => {
         fetchData()
     }
 
-
-
-
-
     // 状态映射
     const statusMap: Record<ChannelStatus, { text: string; color: string }> = {
         active: { text: '合作中', color: 'success' },
@@ -156,64 +153,82 @@ const ChannelList: FC = () => {
         terminated: { text: '已解约', color: 'default' }
     }
 
-    // 分佣类型映射
-    const commissionTypeMap: Record<CommissionType, string> = {
-        custom_ladder: '阶梯分佣',
-        fixed: '固定分佣',
-        personalized: '协议分佣'
-    }
-
-
     const columns = [
         {
             title: '渠道名称',
             dataIndex: 'companyName',
             key: 'companyName',
+            fixed: 'left' as const,
             render: (text: string, record: Channel) => (
-                <a onClick={() => navigate(`/channel-detail/${record.id}`)}>{text}</a>
+                <a onClick={() => navigate(`/channel-detail/${record.id}`)} style={{ fontWeight: 500 }}>{text}</a>
             ),
-            ellipsis: true,
-            width: 250
+            width: 220
         },
         {
-            title: '状态',
-            dataIndex: 'status',
-            key: 'status',
-            width: 80,
-            render: (status: ChannelStatus) => (
-                <Tag color={statusMap[status].color}>{statusMap[status].text}</Tag>
-            )
-        },
-        {
-            title: '推荐客户数',
-            dataIndex: 'totalReportings',
-            key: 'totalReportings',
-            width: 140,
-            align: 'right' as const,
-            sorter: (a: Channel, b: Channel) => (a.totalReportings || 0) - (b.totalReportings || 0)
-        },
-        {
-            title: '成交客户数',
-            dataIndex: 'totalConverted',
-            key: 'totalConverted',
-            width: 140,
-            align: 'right' as const,
-            sorter: (a: Channel, b: Channel) => (a.totalConverted || 0) - (b.totalConverted || 0)
-        },
-        {
-            title: '累计业绩',
+            title: '周期累计业绩',
             dataIndex: 'ytdPerformance',
             key: 'ytdPerformance',
-            width: 120,
+            width: 180,
             align: 'right' as const,
-            render: (val: number) => `${val.toFixed(1)} 万元`
+            render: (val: number, record: Channel) => (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    <Text strong style={{ color: '#1890ff' }}>
+                        {val?.toFixed(2)} 万元
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                        {record.startDate} ~ {record.endDate}
+                    </Text>
+                </div>
+            ),
+            sorter: (a: Channel, b: Channel) => (a.ytdPerformance || 0) - (b.ytdPerformance || 0)
         },
         {
-            title: '分佣类型',
-            dataIndex: 'commissionType',
-            key: 'commissionType',
-            width: 100,
-            render: (type: CommissionType) => commissionTypeMap[type]
+            title: '保护中客户',
+            dataIndex: 'protectedCount',
+            key: 'protectedCount',
+            width: 120,
+            align: 'center' as const,
+            render: (count: number, record: Channel) => (
+                <Button
+                    type="link"
+                    size="small"
+                    onClick={() => navigate(`/reporting-list?channelId=${record.id}&status=protected`)}
+                >
+                    {count || 0}
+                </Button>
+            ),
+            sorter: (a: any, b: any) => (a.protectedCount || 0) - (b.protectedCount || 0)
+        },
+        {
+            title: '累计成交客户',
+            dataIndex: 'totalConverted',
+            key: 'totalConverted',
+            width: 120,
+            align: 'center' as const,
+            render: (val: number) => <Text>{val || 0}</Text>,
+            sorter: (a: any, b: any) => (a.totalConverted || 0) - (b.totalConverted || 0)
+        },
+        {
+            title: '到期时间',
+            dataIndex: 'endDate',
+            key: 'endDate',
+            width: 120,
+            render: (date: string) => {
+                const days = dayjs(date).diff(dayjs(), 'day')
+                const isNear = days >= 0 && days <= 30
+                return (
+                    <span style={{ color: isNear ? '#ff4d4f' : 'inherit', fontWeight: isNear ? 600 : 400 }}>
+                        {date}
+                    </span>
+                )
+            }
+        },
+        {
+            title: '最近成交',
+            dataIndex: 'lastConversionTime',
+            key: 'lastConversionTime',
+            width: 120,
+            render: (text: string) => <Text type="secondary">{text}</Text>
         },
         {
             title: '负责人',
@@ -222,21 +237,27 @@ const ChannelList: FC = () => {
             width: 100
         },
         {
+            title: '状态',
+            dataIndex: 'status',
+            key: 'status',
+            width: 90,
+            render: (status: ChannelStatus) => (
+                <Tag color={statusMap[status].color}>{statusMap[status].text}</Tag>
+            )
+        },
+        {
             title: '操作',
             key: 'action',
             fixed: 'right' as const,
+            width: 80,
             render: (_: any, record: Channel) => (
-                <Space size="small">
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => navigate(`/channel-detail/${record.id}`)}
-                    >
-                        详情
-                    </Button>
-
-
-                </Space>
+                <Button
+                    type="link"
+                    size="small"
+                    onClick={() => navigate(`/channel-detail/${record.id}`)}
+                >
+                    详情
+                </Button>
             )
         }
     ]

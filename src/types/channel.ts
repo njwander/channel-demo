@@ -24,11 +24,15 @@ export interface Channel {
     initialPerformance?: number // 初始化业绩 (万元)
     startDate: string       // 合作开始日 (YYYY-MM-DD)
     endDate: string         // 合作周期截止日期
-    ytdPerformance: number  // 本周期累计业绩 (万元)
+    ytdPerformance: number  // 周期累计业绩 (万元)
     owner: string           // 内部负责人
     totalReportings?: number        // 累计推荐客户数
     totalConverted?: number         // 累计成交客户数
     lastConversionTime?: string     // 最近成交时间
+    contactName?: string           // 联系人姓名
+    contactPhone?: string          // 联系电话
+    contactEmail?: string          // 联系邮箱
+    contactPosition?: string       // 联系人职位
     terminationReason?: string      // 解约原因
     terminationDescription?: string // 解约说明
     terminationVoucher?: string    // 解约协议/沟通确认截图

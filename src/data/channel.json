@@ -10,7 +10,11 @@
         "endDate": "2024-12-31",
         "ytdPerformance": 120.0,
         "owner": "张三",
-        "detailedAddress": "上海市浦东新区张江高科苑路88号"
+        "detailedAddress": "上海市浦东新区张江高科苑路88号",
+        "contactName": "王小二",
+        "contactPhone": "13888888888",
+        "contactEmail": "wang@example.com",
+        "contactPosition": "技术总监"
     },
     {
         "id": "CH2024002",
@@ -23,7 +27,11 @@
         "endDate": "2025-03-14",
         "ytdPerformance": 85.0,
         "owner": "张三",
-        "detailedAddress": "杭州市余杭区文一西路999号"
+        "detailedAddress": "杭州市余杭区文一西路999号",
+        "contactName": "李三",
+        "contactPhone": "13999999999",
+        "contactEmail": "li@example.com",
+        "contactPosition": "商务经理"
     },
     {
         "id": "CH2024003",
@@ -34,7 +42,11 @@
         "startDate": "2024-06-01",
         "endDate": "2025-05-31",
         "ytdPerformance": 50.0,
-        "owner": "李四"
+        "owner": "李四",
+        "contactName": "张大伟",
+        "contactPhone": "13766666666",
+        "contactEmail": "zhang@example.com",
+        "contactPosition": "经理"
     },
     {
         "id": "CH2024004",
@@ -45,7 +57,11 @@
         "startDate": "2024-08-20",
         "endDate": "2025-08-19",
         "ytdPerformance": 30.0,
-        "owner": "王五"
+        "owner": "王五",
+        "contactName": "赵敏",
+        "contactPhone": "13511111111",
+        "contactEmail": "zhao@example.com",
+        "contactPosition": "合伙人"
     },
     {
         "id": "CH2024005",
@@ -57,6 +73,10 @@
         "startDate": "2024-05-10",
         "endDate": "2025-05-09",
         "ytdPerformance": 15.5,
-        "owner": "李四"
+        "owner": "李四",
+        "contactName": "孙悟空",
+        "contactPhone": "13422222222",
+        "contactEmail": "sun@example.com",
+        "contactPosition": "工程师"
     }
 ]

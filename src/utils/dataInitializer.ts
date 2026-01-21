@@ -43,8 +43,8 @@ export const initData = async () => {
         if (storedChannelData) {
             try {
                 const parsed = JSON.parse(storedChannelData)
-                if (Array.isArray(parsed) && parsed.length > 0 && (!parsed[0].commissionType || !parsed[0].detailedAddress)) {
-                    console.log('[数据初始化] ⚠️ Channel data is outdated (missing commissionType or detailedAddress), reloading...')
+                if (Array.isArray(parsed) && parsed.length > 0 && (!parsed[0].commissionType || !parsed[0].detailedAddress || !parsed[0].contactName)) {
+                    console.log('[数据初始化] ⚠️ Channel data is outdated (missing commissionType, detailedAddress or contactName), reloading...')
                     shouldInitChannel = true
                 }
             } catch (e) {

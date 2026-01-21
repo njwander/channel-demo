@@ -385,19 +385,56 @@ const ChannelDetail: FC = () => {
 
             <Row gutter={24} style={{ marginTop: 20 }}>
                 <Col span={24}>
-                    <Card style={{ marginBottom: 24 }}>
-                        <Row gutter={48}>
-                            <Col span={6}>
-                                <Statistic title="本周期业绩" value={data?.ytdPerformance || 0} suffix="万元" precision={2} />
+                    <Card style={{ marginBottom: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                        <Row gutter={48} align="middle">
+                            <Col span={7}>
+                                <Statistic
+                                    title={
+                                        <Space direction="vertical" size={0}>
+                                            <Text type="secondary" style={{ fontSize: 13 }}>周期累计业绩 (回款)</Text>
+                                            <Text type="secondary" style={{ fontSize: 11, opacity: 0.7 }}>
+                                                {data?.startDate ? `${data.startDate} 至 ${data.endDate}` : '-'}
+                                            </Text>
+                                        </Space>
+                                    }
+                                    value={data?.ytdPerformance || 0}
+                                    suffix={<span style={{ fontSize: 14, color: '#999', marginLeft: 4 }}>万元</span>}
+                                    precision={2}
+                                    valueStyle={{ color: '#1890ff', fontSize: 28, fontWeight: 700 }}
+                                />
                             </Col>
-                            <Col span={6}>
-                                <Statistic title="累计成交客户" value={data?.totalConverted || 0} />
+                            <Col span={1}><Divider type="vertical" style={{ height: 40 }} /></Col>
+                            <Col span={5}>
+                                <Statistic
+                                    title={<Text type="secondary" style={{ fontSize: 13 }}>累计成交客户</Text>}
+                                    value={data?.totalConverted || 0}
+                                    valueStyle={{ fontWeight: 600 }}
+                                />
                             </Col>
-                            <Col span={6}>
-                                <Statistic title="权益保护中" value={reportings.filter(r => r.status === 'protected').length} />
+                            <Col span={5}>
+                                <div style={{ cursor: 'pointer' }} onClick={() => {
+                                    const tabs = document.querySelectorAll('.ant-tabs-tab');
+                                    const reportingTab = Array.from(tabs).find(t => t.textContent === '报备管理');
+                                    if (reportingTab) (reportingTab as HTMLElement).click();
+                                }}>
+                                    <Statistic
+                                        title={
+                                            <Space size={4}>
+                                                <Text type="secondary" style={{ fontSize: 13 }}>保护中客户</Text>
+                                                <InfoCircleOutlined style={{ fontSize: 12, color: '#bfbfbf' }} />
+                                            </Space>
+                                        }
+                                        value={reportings.filter(r => r.status === 'protected').length}
+                                        valueStyle={{ color: '#52c41a', fontWeight: 600 }}
+                                    />
+                                </div>
                             </Col>
-                            <Col span={6}>
-                                <Statistic title="预计下月分佣" value={1.2} suffix="万元" precision={2} valueStyle={{ color: '#3f8600' }} />
+                            <Col span={5}>
+                                <Statistic
+                                    title={<Text type="secondary" style={{ fontSize: 13 }}>本月新增报备</Text>}
+                                    value={reportings.filter(r => dayjs(r.reportingTime).isAfter(dayjs().startOf('month'))).length}
+                                    valueStyle={{ fontWeight: 600 }}
+                                />
                             </Col>
                         </Row>
                     </Card>
@@ -442,20 +479,27 @@ const ChannelDetail: FC = () => {
                                                 <Descriptions.Item label="业绩周期">{`${data?.startDate} 至 ${data?.endDate}`}</Descriptions.Item>
                                             </Descriptions>
                                         </Card>
-                                        <Card title="联系人列表" size="small">
+                                        <Card title="联系人信息" size="small">
+                                            <Descriptions column={2}>
+                                                <Descriptions.Item label="姓名">{data?.contactName || '王小二'}</Descriptions.Item>
+                                                <Descriptions.Item label="职位">{data?.contactPosition || '技术总监'}</Descriptions.Item>
+                                                <Descriptions.Item label="电话">{data?.contactPhone || '13888888888'}</Descriptions.Item>
+                                                <Descriptions.Item label="邮箱">{data?.contactEmail || 'wang@example.com'}</Descriptions.Item>
+                                            </Descriptions>
+                                        </Card>
+                                        <Card title="已签署合规文件" size="small">
                                             <Table
                                                 size="small"
                                                 dataSource={[
-                                                    { key: '1', name: '王小二', position: '技术总监', phone: '13888888888', email: 'wang@example.com' },
-                                                    { key: '2', name: '李三', position: '商务经理', phone: '13999999999', email: 'li@example.com' }
+                                                    { key: '1', name: '渠道入驻合作协议.pdf', type: 'standard', date: '2024-01-01' },
+                                                    { key: '2', name: '廉洁合作承诺书.pdf', type: 'attachment', date: '2024-01-01' }
                                                 ]}
                                                 columns={[
-                                                    { title: '姓名', dataIndex: 'name', key: 'name' },
-                                                    { title: '职位', dataIndex: 'position', key: 'position' },
-                                                    { title: '电话', dataIndex: 'phone', key: 'phone' },
-                                                    { title: '邮箱', dataIndex: 'email', key: 'email' }
+                                                    { title: '文件名称', dataIndex: 'name', key: 'name', render: (t) => <Button type="link" icon={<FilePdfOutlined />}>{t}</Button> },
+                                                    { title: '类型', dataIndex: 'type', key: 'type', render: (t) => t === 'standard' ? <Tag color="blue">标准合同</Tag> : <Tag>补充附件</Tag> },
+                                                    { title: '签署日期', dataIndex: 'date', key: 'date' },
+                                                    { title: '操作', key: 'op', render: () => <Button size="small" icon={<DownloadOutlined />}>下载</Button> }
                                                 ]}
-                                                pagination={false}
                                             />
                                         </Card>
                                     </div>
@@ -465,29 +509,74 @@ const ChannelDetail: FC = () => {
                                 key: 'reporting',
                                 label: '报备管理',
                                 children: (
-                                    <Card
-                                        title={`报备客户 (${reportings.length})`}
-                                        size="small"
-                                        extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/reporting-new')}>新建报备</Button>}
-                                    >
-                                        <Table
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                                        {/* 报备转化漏斗 */}
+                                        <Card title="报备转化漏斗" size="small">
+                                            <Row gutter={16} align="middle" style={{ padding: '20px 0' }}>
+                                                {[
+                                                    { label: '录入数', value: reportings.length, color: '#f0f5ff', iconColor: '#2f54eb' },
+                                                    { label: '通过评审数', value: reportings.filter(r => !['pending', 'rejected'].includes(r.status)).length, color: '#e6f7ff', iconColor: '#1890ff' },
+                                                    { label: '有效宣讲数', value: reportings.filter(r => r.status === 'converted' || r.isValid).length, color: '#f6ffed', iconColor: '#52c41a' },
+                                                    { label: '成单转化数', value: reportings.filter(r => r.status === 'converted').length, color: '#fff7e6', iconColor: '#fa8c16' }
+                                                ].map((stage, idx, arr) => (
+                                                    <Col key={idx} span={6} style={{ position: 'relative' }}>
+                                                        <div style={{
+                                                            background: stage.color,
+                                                            padding: '16px',
+                                                            borderRadius: 8,
+                                                            textAlign: 'center',
+                                                            border: `1px solid ${stage.iconColor}20`
+                                                        }}>
+                                                            <div style={{ fontSize: 12, color: '#8c8c8c', marginBottom: 4 }}>{stage.label}</div>
+                                                            <div style={{ fontSize: 24, fontWeight: 700, color: stage.iconColor }}>{stage.value}</div>
+                                                            {idx > 0 && arr[idx - 1].value > 0 && (
+                                                                <div style={{ fontSize: 11, color: '#acacac', marginTop: 4 }}>
+                                                                    转化率: {((stage.value / arr[idx - 1].value) * 100).toFixed(1)}%
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {idx < arr.length - 1 && (
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                right: -10,
+                                                                top: '50%',
+                                                                transform: 'translateY(-50%)',
+                                                                zIndex: 1,
+                                                                fontSize: 20,
+                                                                color: '#bfbfbf'
+                                                            }}>
+                                                                →
+                                                            </div>
+                                                        )}
+                                                    </Col>
+                                                ))}
+                                            </Row>
+                                        </Card>
+
+                                        <Card
+                                            title={`报备客户列表 (${reportings.length})`}
                                             size="small"
-                                            dataSource={reportings}
-                                            columns={[
-                                                { title: '客户名称', dataIndex: 'customerName', key: 'customerName', render: (text, record) => <a onClick={() => navigate(`/reporting-detail/${record.id}`)}>{text}</a> },
-                                                { title: '报备状态', dataIndex: 'status', key: 'status', render: (status: any) => <Tag>{status}</Tag> },
-                                                { title: '保护到期', dataIndex: 'expiryDate', key: 'expiryDate' },
-                                                { title: '负责人', dataIndex: 'channelOwner', key: 'channelOwner' }
-                                            ]}
-                                        />
-                                    </Card>
+                                            extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/reporting-new')}>新建报备</Button>}
+                                        >
+                                            <Table
+                                                size="small"
+                                                dataSource={reportings}
+                                                columns={[
+                                                    { title: '客户名称', dataIndex: 'customerName', key: 'customerName', render: (text, record) => <a onClick={() => navigate(`/reporting-detail/${record.id}`)}>{text}</a> },
+                                                    { title: '报备状态', dataIndex: 'status', key: 'status', render: (status: any) => <Tag>{status}</Tag> },
+                                                    { title: '保护到期', dataIndex: 'expiryDate', key: 'expiryDate' },
+                                                    { title: '负责人', dataIndex: 'channelOwner', key: 'channelOwner' }
+                                                ]}
+                                            />
+                                        </Card>
+                                    </div>
                                 )
                             },
                             {
                                 key: 'performance',
                                 label: '成交业绩',
                                 children: (
-                                    <Card title="成交订单列表" size="small">
+                                    <Card title="成交订单列表 (回款详情)" size="small">
                                         <Table
                                             size="small"
                                             dataSource={[
@@ -498,9 +587,8 @@ const ChannelDetail: FC = () => {
                                                 { title: '订单单号', dataIndex: 'orderId', key: 'orderId' },
                                                 { title: '客户名称', dataIndex: 'customer', key: 'customer' },
                                                 { title: '成单日期', dataIndex: 'date', key: 'date' },
-                                                { title: '订单金额 (万)', dataIndex: 'amount', key: 'amount', align: 'right' },
-                                                { title: '回款金额 (万)', dataIndex: 'paid', key: 'paid', align: 'right' },
-                                                { title: '关联分佣 (万)', dataIndex: 'commission', key: 'commission', align: 'right' }
+                                                { title: '回款金额 (万元)', dataIndex: 'paid', key: 'paid', align: 'right', render: (val) => <Text strong color="#1890ff">{val.toFixed(2)}</Text> },
+                                                { title: '关联分佣 (万元)', dataIndex: 'commission', key: 'commission', align: 'right', render: (val) => val.toFixed(2) }
                                             ]}
                                         />
                                     </Card>
@@ -522,27 +610,6 @@ const ChannelDetail: FC = () => {
                                                 { title: '结算金额 (万)', dataIndex: 'amount', key: 'amount', align: 'right' },
                                                 { title: '状态', dataIndex: 'status', key: 'status', render: (s) => <Tag color="success">已支付</Tag> },
                                                 { title: '支付日期', dataIndex: 'payoutDate', key: 'payoutDate' }
-                                            ]}
-                                        />
-                                    </Card>
-                                )
-                            },
-                            {
-                                key: 'contract',
-                                label: '合同协议',
-                                children: (
-                                    <Card title="已签署合规文件" size="small">
-                                        <Table
-                                            size="small"
-                                            dataSource={[
-                                                { key: '1', name: '渠道入驻合作协议.pdf', type: 'standard', date: '2024-01-01' },
-                                                { key: '2', name: '廉洁合作承诺书.pdf', type: 'attachment', date: '2024-01-01' }
-                                            ]}
-                                            columns={[
-                                                { title: '文件名称', dataIndex: 'name', key: 'name', render: (t) => <Button type="link" icon={<FilePdfOutlined />}>{t}</Button> },
-                                                { title: '类型', dataIndex: 'type', key: 'type', render: (t) => t === 'standard' ? <Tag color="blue">标准合同</Tag> : <Tag>补充附件</Tag> },
-                                                { title: '签署日期', dataIndex: 'date', key: 'date' },
-                                                { title: '操作', key: 'op', render: () => <Button size="small" icon={<DownloadOutlined />}>下载</Button> }
                                             ]}
                                         />
                                     </Card>
