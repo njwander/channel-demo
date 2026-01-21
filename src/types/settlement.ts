@@ -1,4 +1,22 @@
 /**
+ * 审批状态
+ */
+export type SettlementStatus = 'pending' | 'approved' | 'signed' | 'rejected'
+
+/**
+ * 质检结果项
+ */
+export interface QualityCheckItem {
+    id: string
+    customerName: string
+    legalPerson: string
+    gsCheckResult: 'pass' | 'name_mismatch' | 'query_failed'
+    crmExists: boolean
+    crmId?: string
+}
+
+/**
+
  * 阶梯梯度定义
  */
 export interface LadderTier {
