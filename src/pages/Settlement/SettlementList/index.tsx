@@ -104,18 +104,11 @@ const SettlementList: FC = () => {
 
     const columns = [
         {
-            title: '申请单号',
-            dataIndex: 'id',
-            key: 'id',
-            width: 150,
-            render: (text: string) => <a onClick={() => navigate(`/settlement-detail/${text}`)}>{text}</a>
-        },
-        {
             title: '渠道名称',
             dataIndex: 'companyName',
             key: 'companyName',
             ellipsis: true,
-            width: 250
+            width: 300
         },
         {
             title: '所在城市',
@@ -147,24 +140,26 @@ const SettlementList: FC = () => {
         {
             title: '操作',
             key: 'action',
-            render: (_: any, record: SettlementApplication) => (
-                <Space size="small">
-                    <Button type="link" size="small" onClick={() => navigate(`/settlement-detail/${record.id}`)}>详情</Button>
-                    {record.auditStatus === 'rejected' && (
-                        <Button type="link" size="small" onClick={() => navigate(`/settlement-new?id=${record.id}`)}>编辑</Button>
-                    )}
-                    {record.auditStatus === 'approved' && (
-                        <Button
-                            type="link"
-                            size="small"
-                            disabled={record.contractType === 'non-standard' && record.contractAuditStatus !== 'approved'}
-                            onClick={() => window.open('https://example.com/signing-platform', '_blank')}
-                        >
-                            签约
+            render: (_: any, record: SettlementApplication) => {
+                const getDetailBtnText = (status: SettlementStatus) => {
+                    switch (status) {
+                        case 'pending': return '审批';
+                        case 'approved': return '签约';
+                        default: return '详情';
+                    }
+                };
+
+                return (
+                    <Space size="small">
+                        <Button type="link" size="small" onClick={() => navigate(`/settlement-detail/${record.id}`)}>
+                            {getDetailBtnText(record.auditStatus)}
                         </Button>
-                    )}
-                </Space>
-            )
+                        {record.auditStatus === 'rejected' && (
+                            <Button type="link" size="small" onClick={() => navigate(`/settlement-new?id=${record.id}`)}>编辑</Button>
+                        )}
+                    </Space>
+                );
+            }
         }
     ]
 
