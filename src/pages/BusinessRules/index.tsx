@@ -5,7 +5,7 @@ import mermaid from 'mermaid';
 import { Card, Typography, Breadcrumb, Space, Divider, Skeleton, Row, Col, Anchor, ConfigProvider } from 'antd';
 import { FileTextOutlined, HomeOutlined, MenuOutlined } from '@ant-design/icons';
 // @ts-ignore
-import content from '../../../docs/business-rules.md?raw';
+import content from '../../../docs/business-rules-v2.md?raw';
 
 const { Title, Text } = Typography;
 
